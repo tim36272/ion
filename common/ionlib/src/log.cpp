@@ -1,0 +1,52 @@
+#include "ionlib\log.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
+#include "ionlib\app_util.h"
+
+namespace ion
+{
+	FILE* g_log_file = NULL;
+
+	bool LogInit(const char* log_file_name)
+	{
+		errno_t result = fopen_s(&g_log_file, log_file_name, "w");
+		if (result != 0 || g_log_file == NULL)
+		{
+			//bypass the normal logger and just printf since logging isn't initialized yet
+			printf("Failed to open log file %s", log_file_name);
+			ion::AppFail(-1);
+			return false;
+		}
+		return true;
+	}
+	void LogClose()
+	{
+		if (g_log_file != NULL)
+		{
+			fclose(g_log_file);
+		}
+	}
+	void LogPrintf(const char* file, uint32_t line, char* format, ...)
+	{
+		va_list args;
+		va_start(args, format);
+		char buffer[IONLOG_MAX_MESSAGE_LENGTH];
+		//advance the file name pointer to the letter right after the last slash
+		const char* cursor = file;
+		while (*cursor != '\0')
+		{
+			if (*cursor == '\\')
+			{
+				file = cursor + 1;
+			}
+			cursor++;
+		}
+		int num_bytes_written = snprintf(buffer, IONLOG_MAX_MESSAGE_LENGTH, "%s:%d ", file, line);
+		num_bytes_written += vsnprintf(buffer + num_bytes_written, IONLOG_MAX_MESSAGE_LENGTH - num_bytes_written, format, args);
+		num_bytes_written += snprintf(buffer + num_bytes_written, IONLOG_MAX_MESSAGE_LENGTH - num_bytes_written, "\r\n");
+		printf(buffer);
+		fwrite(buffer, 1, num_bytes_written, g_log_file);
+		va_end(args);
+	}
+} //namespace ion
