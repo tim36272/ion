@@ -17,7 +17,15 @@ namespace ion
 #define LOGINFO(...)  ion::LogPrintf(__FILE__, __LINE__, "INFO: " ## __VA_ARGS__)
 #define LOGWARN(...)  ion::LogPrintf(__FILE__, __LINE__, "WARN: " ## __VA_ARGS__)
 #define LOGERROR(...) ion::LogPrintf(__FILE__, __LINE__, "ERROR: " ## __VA_ARGS__)
-#define LOGFATAL(...) {ion::LogPrintf(__FILE__, __LINE__, "FATAL: " ## __VA_ARGS__); ion::AppFail(-1);}
+#define LOGFATAL(...) {\
+ion::LogPrintf(__FILE__, __LINE__, "FATAL: " ## __VA_ARGS__);\
+ion::AppFail(-1);\
+}
+#define LOGASSERT(b,...) {\
+  if(!(b)) {\
+  LOGFATAL("Error");\
+  }\
+}
 
 } //namespace ion
 #endif //IONLOG_H_

@@ -18,8 +18,19 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\inc\ionalgolib\bfs.h" />
+    <ClInclude Include="..\..\inc\ionalgolib\dfs.h" />
+    <ClInclude Include="..\..\inc\ionalgolib\traverse.h" />
+    <ClInclude Include="..\..\inc\ionalgolib\tree.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\bfs.cpp" />
+    <ClCompile Include="..\..\src\traverse.cpp" />
+    <ClCompile Include="..\..\src\tree.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{473E809F-98A8-4A92-A204-8A40775C3875}</ProjectGuid>
+    <ProjectGuid>{3C0F091F-6E20-4805-8F5C-34B63879992A}</ProjectGuid>
     <RootNamespace>ionlib</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -72,25 +83,25 @@
     <OutDir>$(ProjectDir)..\..\bin\</OutDir>
     <IntDir>$(ProjectDir)\$(Platform)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)-$(Platform)-$(Configuration)</TargetName>
-    <IncludePath>$(ProjectDir)..\..\inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\..\inc;$(ProjectDir)..\..\..\ionlib\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(ProjectDir)..\..\bin\</OutDir>
     <IntDir>$(ProjectDir)\$(Platform)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)-$(Platform)-$(Configuration)</TargetName>
-    <IncludePath>$(ProjectDir)..\..\inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\..\inc;$(ProjectDir)..\..\..\ionlib\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(ProjectDir)..\..\bin\</OutDir>
     <IntDir>$(ProjectDir)\$(Platform)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)-$(Platform)-$(Configuration)</TargetName>
-    <IncludePath>$(ProjectDir)..\..\inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\..\inc;$(ProjectDir)..\..\..\ionlib\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(ProjectDir)..\..\bin\</OutDir>
     <IntDir>$(ProjectDir)\$(Platform)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)-$(Platform)-$(Configuration)</TargetName>
-    <IncludePath>$(ProjectDir)..\..\inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\..\inc;$(ProjectDir)..\..\..\ionlib\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -146,26 +157,6 @@
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\inc\ionlib\app_util.h" />
-    <ClInclude Include="..\..\inc\ionlib\error.h" />
-    <ClInclude Include="..\..\inc\ionlib\ip_address.h" />
-    <ClInclude Include="..\..\inc\ionlib\log.h" />
-    <ClInclude Include="..\..\inc\ionlib\net.h" />
-    <ClInclude Include="..\..\inc\ionlib\queue.h" />
-    <ClInclude Include="..\..\inc\ionlib\test.h" />
-    <ClInclude Include="..\..\inc\ionlib\thread.h" />
-    <ClInclude Include="..\..\inc\ionlib\time.h" />
-    <ClInclude Include="..\..\inc\ionlib\tree.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\src\app_util.cpp" />
-    <ClCompile Include="..\..\src\error.cpp" />
-    <ClCompile Include="..\..\src\ip_address.cpp" />
-    <ClCompile Include="..\..\src\log.cpp" />
-    <ClCompile Include="..\..\src\net-win.cpp" />
-    <ClCompile Include="..\..\src\tree.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

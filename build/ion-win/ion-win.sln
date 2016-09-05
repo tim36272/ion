@@ -12,6 +12,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "app-win", "..\..\app\app\pr
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "scantron-win", "..\..\app\scantron\prj\scantron-win\scantron-win.vcxproj", "{37AD27E5-933F-4FC8-A981-FF15A30FAE1C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ionalgolib", "..\..\common\ionalgolib\prj\ionalgolib-win\ionalgolib.vcxproj", "{3C0F091F-6E20-4805-8F5C-34B63879992A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -44,6 +46,14 @@ Global
 		{37AD27E5-933F-4FC8-A981-FF15A30FAE1C}.Release|x64.Build.0 = Release|x64
 		{37AD27E5-933F-4FC8-A981-FF15A30FAE1C}.Release|x86.ActiveCfg = Release|Win32
 		{37AD27E5-933F-4FC8-A981-FF15A30FAE1C}.Release|x86.Build.0 = Release|Win32
+		{3C0F091F-6E20-4805-8F5C-34B63879992A}.Debug|x64.ActiveCfg = Debug|x64
+		{3C0F091F-6E20-4805-8F5C-34B63879992A}.Debug|x64.Build.0 = Debug|x64
+		{3C0F091F-6E20-4805-8F5C-34B63879992A}.Debug|x86.ActiveCfg = Debug|Win32
+		{3C0F091F-6E20-4805-8F5C-34B63879992A}.Debug|x86.Build.0 = Debug|Win32
+		{3C0F091F-6E20-4805-8F5C-34B63879992A}.Release|x64.ActiveCfg = Release|x64
+		{3C0F091F-6E20-4805-8F5C-34B63879992A}.Release|x64.Build.0 = Release|x64
+		{3C0F091F-6E20-4805-8F5C-34B63879992A}.Release|x86.ActiveCfg = Release|Win32
+		{3C0F091F-6E20-4805-8F5C-34B63879992A}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

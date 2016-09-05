@@ -27,3 +27,10 @@
 *.exe
 *.out
 *.app
+
+#Visual studio files
+*.log
+*.idb
+*.pdb
+*.tlog
+*.lastbuildstate

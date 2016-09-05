@@ -9,6 +9,7 @@ namespace ion
 	class UdpSocket
 	{
 	public:
+		UdpSocket();
 		bool Create();
 		void Close();
 		bool Bind(uint16_t port);
