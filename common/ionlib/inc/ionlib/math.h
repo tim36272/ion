@@ -14,25 +14,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef ION_NET_H_
-#define ION_NET_H_
-#include <WinSock2.h>
-#include "ionlib\ip_address.h"
+#ifndef ION_MATH_H_
+#define ION_MATH_H_
 namespace ion
 {
-	bool InitSockets();
-	void StopSockets();
-	class UdpSocket
-	{
-	public:
-		UdpSocket();
-		bool Create();
-		void Close();
-		bool Bind(uint16_t port);
-		bool SendTo(const char* buf, uint32_t len, IpAddress address, uint16_t port);
-		int32_t Recv(char* buf, uint32_t len, IpAddress* src_sddress);
-	private:
-		SOCKET socket_handle_;
-	};
-} //namespace ion
-#endif //IONNET_H_
+#ifndef max
+#define max(a,b)  (((a) > (b)) ? (a) : (b))
+#endif
+
+#ifndef min
+#define min(a,b)  (((a) < (b)) ? (a) : (b))
+#endif
+};
+#endif //ION_MATH_H_

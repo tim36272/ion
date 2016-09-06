@@ -39,10 +39,10 @@
     <ClInclude Include="..\..\inc\ionlib\tree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\ionlib\test.h">
+    <ClInclude Include="..\..\inc\ionlib\error.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\ionlib\error.h">
+    <ClInclude Include="..\..\inc\ionlib\math.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

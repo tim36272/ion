@@ -151,9 +151,9 @@
     <ClInclude Include="..\..\inc\ionlib\error.h" />
     <ClInclude Include="..\..\inc\ionlib\ip_address.h" />
     <ClInclude Include="..\..\inc\ionlib\log.h" />
+    <ClInclude Include="..\..\inc\ionlib\math.h" />
     <ClInclude Include="..\..\inc\ionlib\net.h" />
     <ClInclude Include="..\..\inc\ionlib\queue.h" />
-    <ClInclude Include="..\..\inc\ionlib\test.h" />
     <ClInclude Include="..\..\inc\ionlib\thread.h" />
     <ClInclude Include="..\..\inc\ionlib\time.h" />
     <ClInclude Include="..\..\inc\ionlib\tree.h" />
