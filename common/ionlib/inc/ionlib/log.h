@@ -23,7 +23,7 @@ ion::AppFail(-1);\
 }
 #define LOGASSERT(b,...) {\
   if(!(b)) {\
-  LOGFATAL("Error");\
+  LOGFATAL("Assertion failed: "#b" INFO: "##__VA_ARGS__);\
   }\
 }
 

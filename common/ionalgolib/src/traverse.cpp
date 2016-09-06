@@ -16,9 +16,3 @@ along with Foobar.If not, see <http://www.gnu.org/licenses/>.
 */
 #include "ionalgolib\traverse.h"
 #include "ionlib\log.h"
-
-template <class T>
-ion::algo::TreeIterator<ion::TreeNode<T>> ion::algo::traverse(traversal_type_t type, ion::TreeNode<T> root)
-{
-	return ion::algo::TreeIterator<TreeNode<T>>(root, type);
-}
