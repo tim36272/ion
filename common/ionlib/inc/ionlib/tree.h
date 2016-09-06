@@ -181,7 +181,13 @@ typename void ion::TreeNode<T>::print(std::ostream &output)
 	while (!it.complete())
 	{
 		item = *it;
-		output << "x" << item->parent_ << " -> " << "x" << item << std::endl;
+		if (item->parent_ == nullptr)
+		{
+			output << "root -> \"" << (item->GetData()) << "\"" << std::endl;
+		} else
+		{
+			output << "\"" << (item->parent_->GetData()) << "\" -> \"" << (item->GetData()) << "\"" << std::endl;
+		}
 		++it;
 	}
 	output << "}";
