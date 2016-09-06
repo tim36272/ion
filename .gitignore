@@ -34,3 +34,7 @@
 *.pdb
 *.tlog
 *.lastbuildstate
+*.ilk
+*.enc
+.suo
+*.db
