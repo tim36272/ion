@@ -41,7 +41,7 @@ public:
 	T GetData();
 	void SetData(T data);
 	void AddLeaf(T data);
-	TreeNode<T>& GetLeaf(size_t index);
+	TreeNode<T>* GetLeaf(size_t index);
 	size_t NumLeafs()
 	{
 		return leafs_.size();
@@ -50,30 +50,30 @@ public:
 	{
 		return parent_;
 	}
-	typename std::vector<TreeNode<T>>::iterator begin();
-	typename std::vector<TreeNode<T>>::iterator end();
-	std::vector<ion::TreeNode<T>> GetPath(T data);
+	typename std::vector<TreeNode<T>*>::iterator begin();
+	typename std::vector<TreeNode<T>*>::iterator end();
+	std::vector<ion::TreeNode<T>*> GetPath(T data);
 	void print(std::ostream &output);
 	class iterator
 	{
 	public:
 		iterator();
 		iterator(ion::traversal_type_t type);
-		void init(TreeNode<T> root);
+		void init(TreeNode<T>* root);
 		iterator(const iterator& rhs);
 		iterator& operator++();
 		iterator& operator++(int);
 		bool operator==(const iterator& rhs);
 		bool operator!=(const iterator& rhs);
-		TreeNode<T>& operator*();
+		TreeNode<T>* operator*();
 		bool complete();
 	private:
-		std::deque<TreeNode<T>> queue_;
+		std::deque<TreeNode<T>*> queue_;
 		ion::traversal_type_t traversal_type_;
 	};
 private:
 	T data_;
-	std::vector<TreeNode<T>> leafs_;
+	std::vector<TreeNode<T>*> leafs_;
 	TreeNode<T>* parent_;
 };
 }
@@ -110,34 +110,34 @@ void ion::TreeNode<T>::SetData(T data)
 template <class T>
 void ion::TreeNode<T>::AddLeaf(T data)
 {
-	ion::TreeNode<T> new_leaf(data, this);
+	ion::TreeNode<T>* new_leaf= new ion::TreeNode<T>(data, this);
 	this->leafs_.push_back(new_leaf);
 }
 template <class T>
-ion::TreeNode<T>& ion::TreeNode<T>::GetLeaf(size_t index)
+ion::TreeNode<T>* ion::TreeNode<T>::GetLeaf(size_t index)
 {
 	LOGASSERT(index < this->leafs_.size());
 	return this->leafs_[index];
 }
 template <class T>
-typename std::vector<ion::TreeNode<T>>::iterator ion::TreeNode<T>::begin()
+typename std::vector<ion::TreeNode<T>*>::iterator ion::TreeNode<T>::begin()
 {
 	return this->leafs_.begin();
 }
 template <class T>
-typename std::vector<ion::TreeNode<T>>::iterator ion::TreeNode<T>::end()
+typename std::vector<ion::TreeNode<T>*>::iterator ion::TreeNode<T>::end()
 {
 	return this->leafs_.end();
 }
 template <class T>
-typename std::vector<ion::TreeNode<T>> ion::TreeNode<T>::GetPath(T data)
+typename std::vector<ion::TreeNode<T>*> ion::TreeNode<T>::GetPath(T data)
 {
-	std::vector<ion::TreeNode<T>> path;
+	std::vector<ion::TreeNode<T>*> path;
 	ion::TreeNode<T>::iterator it(ion::BREADTH_FIRST);
-	it.init(*this);
+	it.init(this);
 	while (!it.complete())
 	{
-		if ((*it).GetData() == data) {
+		if ((*it)->GetData() == data) {
 			//this is the element we were searching for, return the path to this one
 			break;
 		}
@@ -148,9 +148,9 @@ typename std::vector<ion::TreeNode<T>> ion::TreeNode<T>::GetPath(T data)
 		//return empty path
 		return path;
 	}
-	ion::TreeNode<T>* cursor = &(*it);
+	ion::TreeNode<T>* cursor = *it;
 	//push the cursor because the found element always has to be pushed, otherwise we wouldn't be able to distinguish between a missing element and an element at the root
-	path.push_back(*cursor);
+	path.push_back(cursor);
 	while ((cursor->GetParent() != nullptr) && (cursor != this))
 	{
 		cursor = cursor->GetParent();
@@ -166,7 +166,7 @@ typename std::vector<ion::TreeNode<T>> ion::TreeNode<T>::GetPath(T data)
 				LOGFATAL("Invalid parent");
 			}
 		}
-		path.push_back(*cursor);
+		path.push_back(cursor);
 	} 
 	return path;
 }
@@ -175,12 +175,12 @@ template <class T>
 typename void ion::TreeNode<T>::print(std::ostream &output)
 {
 	ion::TreeNode<T>::iterator it(ion::BREADTH_FIRST);
-	it.init(*this);
+	it.init(this);
 	ion::TreeNode<T>* item;
 	output << "digraph G {" << std::endl;
 	while (!it.complete())
 	{
-		item = &(*it);
+		item = *it;
 		output << "x" << item->parent_ << " -> " << "x" << item << std::endl;
 		++it;
 	}
@@ -207,7 +207,7 @@ namespace ion
 		this->traversal_type_ = type;
 	}
 	template <class T>
-	void TreeNode<T>::iterator::init(TreeNode<T> root)
+	void TreeNode<T>::iterator::init(TreeNode<T>* root)
 	{
 		queue_.push_back(root);
 	}
@@ -225,7 +225,7 @@ namespace ion
 		{
 			LOGFATAL("Attempted to increment a tree iterator past the end of the tree");
 		}
-		TreeNode<T> cursor;
+		TreeNode<T>* cursor;
 		switch (traversal_type_)
 		{
 			case ion::BREADTH_FIRST:
@@ -236,9 +236,9 @@ namespace ion
 				//{
 				//	LOGASSERT(size_t(cursor.parent_->parent_) != 0xDDDDDDDDDDDDDDDD);
 				//}
-				for (size_t branch_index = 0; branch_index < cursor.NumLeafs(); ++branch_index)
+				for (size_t branch_index = 0; branch_index < cursor->NumLeafs(); ++branch_index)
 				{
-					queue_.push_back(cursor.GetLeaf(branch_index));
+					queue_.push_back(cursor->GetLeaf(branch_index));
 				}
 				break;
 			case ion::DEPTH_FIRST:
@@ -246,9 +246,9 @@ namespace ion
 				//notice the queueing is actually done in reverse so that we traverse in the common top-down left-right order (although the other order would still technically be a depth-first search)
 				cursor = queue_.back();
 				queue_.pop_back();
-				for (size_t branch_index = cursor.NumLeafs(); branch_index != 0; --branch_index)
+				for (size_t branch_index = cursor->NumLeafs(); branch_index != 0; --branch_index)
 				{
-					queue_.push_back(cursor.GetLeaf(branch_index-1));
+					queue_.push_back(cursor->GetLeaf(branch_index-1));
 				}
 				break;
 			default:
@@ -260,7 +260,7 @@ namespace ion
 	template <class T>
 	typename TreeNode<T>::iterator& TreeNode<T>::iterator::operator++(int)
 	{
-		TreeIterator<T> tmp(*this);
+		TreeNode<T>::iterator tmp(*this);
 		operator++();
 		return tmp;
 	}
@@ -294,7 +294,7 @@ namespace ion
 		return !this->operator==(rhs);
 	}
 	template <class T>
-	typename TreeNode<T>& TreeNode<T>::iterator::operator*()
+	typename TreeNode<T>* TreeNode<T>::iterator::operator*()
 	{
 		switch (traversal_type_)
 		{
@@ -309,7 +309,7 @@ namespace ion
 				break;
 		}
 		LOGFATAL("Shouldn't have ran to this line");
-		return queue_.front();
+		return nullptr;
 	}
 	template <class T>
 	typename bool TreeNode<T>::iterator::complete()
