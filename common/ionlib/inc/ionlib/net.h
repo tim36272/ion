@@ -18,19 +18,20 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #define ION_NET_H_
 #include <WinSock2.h>
 #include "ionlib\ip_address.h"
+#include "ionlib\error.h"
 namespace ion
 {
-	bool InitSockets();
+	ion::Error InitSockets();
 	void StopSockets();
 	class UdpSocket
 	{
 	public:
 		UdpSocket();
-		bool Create();
+		ion::Error Create();
 		void Close();
-		bool Bind(uint16_t port);
-		bool SendTo(const char* buf, uint32_t len, IpAddress address, uint16_t port);
-		int32_t Recv(char* buf, uint32_t len, IpAddress* src_sddress);
+		ion::Error Bind(uint16_t port);
+		ion::Error SendTo(const char* buf, uint32_t len, IpAddress address, uint16_t port);
+		ion::Error Recv(char* buf, uint32_t len, IpAddress* src_sddress);
 	private:
 		SOCKET socket_handle_;
 	};

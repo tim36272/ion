@@ -15,17 +15,30 @@ You should have received a copy of the GNU General Public License
 along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
 #include "ionlib\error.h"
-#include <map>
+#include <set>
 #include "ionlib\log.h"
 
-std::map<ion::Error::status_t,ion::Error> all_errors = { 
-	{ion::Error::SUCCESS,{ ion::Error::SUCCESS,"No error occurred" }},
-	{ ion::Error::VALUE_ERROR,{ ion::Error::VALUE_ERROR,"No error occurred" } }
+std::set<ion::Error> all_errors = { 
+	{ ion::Error::SUCCESS,"No error occurred" },
+	{ ion::Error::PARAMETER,"Parameter was invalid" },
+	{ ion::Error::PARAMETER_VALUE,"Parameter value was out of range" },
+	{ ion::Error::SOCKET, "SOcket error"}
 };
 
+ion::Error::Error(ion::Error::status_t id, std::string explanation)
+{
+	this->id_ = id;
+	this->explanation_ = explanation;
+}
 ion::Error ion::Error::Get(ion::Error::status_t status)
 {
-	std::map<ion::Error::status_t,ion::Error>::iterator it = all_errors.find(status);
+	ion::Error temp(status);
+	std::set<ion::Error>::iterator it = all_errors.find(temp);
 	LOGASSERT(it != all_errors.end());
-	return it->second;
+	return *it;
+}
+
+bool ion::Error::operator==(const ion::Error & rhs)
+{
+	return (rhs.id_ == this->id_);
 }

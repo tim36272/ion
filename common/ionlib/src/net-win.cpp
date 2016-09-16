@@ -25,7 +25,7 @@ namespace ion
 	{
 		this->socket_handle_ = INVALID_SOCKET;
 	}
-	bool ion::InitSockets()
+	ion::Error ion::InitSockets()
 	{
 		//start Windows socket handling and request Winsock Version 2.2
 		WSAData wsa_data;
@@ -33,16 +33,16 @@ namespace ion
 		if (result != 0)
 		{
 			LOGERROR("Failed to initialize socket library with error code %d", result);
-			return false;
+			return ion::Error::Get(ion::Error::SOCKET);
 		}
 		//check that it loaded version 2.2 as requested
 		if (LOBYTE(wsa_data.wVersion) != 2 || HIBYTE(wsa_data.wVersion) != 2)
 		{
 			ion::StopSockets();
 			LOGERROR("Failed to initialize socket library. Requested version 2.2, got version %u.%u", static_cast<uint32_t>(HIBYTE(wsa_data.wVersion)), static_cast<uint32_t>(LOBYTE(wsa_data.wVersion)));
-			return false;
+			return ion::Error::Get(ion::Error::SOCKET);
 		}
-		return true;
+		return ion::Error::Get(ion::Error::SUCCESS);
 	}
 	void ion::StopSockets()
 	{
@@ -56,21 +56,21 @@ namespace ion
 		FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, wsa_error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&error_message_buffer, 0, NULL);
 		return (const char*)error_message_buffer;
 	}
-	bool UdpSocket::Create()
+	ion::Error UdpSocket::Create()
 	{
 		this->socket_handle_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 		if (this->socket_handle_ == INVALID_SOCKET)
 		{
 			LOGERROR("Failed to create UDP socket, error %u: %s", GetLastError(), ion::getLastErrorString());
-			return false;
+			return ion::Error::Get(ion::Error::SOCKET);
 		}
-		return true;
+		return ion::Error::Get(ion::Error::SUCCESS);
 	}
 	void UdpSocket::Close()
 	{
 		closesocket(this->socket_handle_);
 	}
-	bool UdpSocket::Bind(uint16_t port)
+	ion::Error UdpSocket::Bind(uint16_t port)
 	{
 		int32_t status;
 		sockaddr_in addr;
@@ -82,11 +82,11 @@ namespace ion
 		if (status < 0)
 		{
 			LOGERROR("Failed to bind socket, error %u: %s", GetLastError(), ion::getLastErrorString());
-			return false;
+			return ion::Error::Get(ion::Error::SOCKET);
 		}
-		return true;;
+		return ion::Error::Get(ion::Error::SUCCESS);
 	}
-	bool UdpSocket::SendTo(const char* buf, uint32_t len, IpAddress address, uint16_t port)
+	ion::Error UdpSocket::SendTo(const char* buf, uint32_t len, IpAddress address, uint16_t port)
 	{
 		sockaddr_in send_to_addr;
 		send_to_addr.sin_family = AF_INET;
@@ -97,12 +97,25 @@ namespace ion
 		if (bytes_sent != len)
 		{
 			LOGERROR("Failed to send packet to %s:%hu, len: %u, error %d: %s", address.as_string(), port, GetLastError(), ion::getLastErrorString());
-			return false;
+			return ion::Error::Get(ion::Error::SOCKET);
 		}
-		return true;
+		return ion::Error::Get(ion::Error::SUCCESS);
 	}
-	int32_t UdpSocket::Recv(char* buf, uint32_t len, IpAddress* src_sddress)
+	ion::Error UdpSocket::Recv(char* buf, uint32_t len, IpAddress* src_sddress)
 	{
-		return -1;
+		sockaddr_in sender;
+		int sender_length = sizeof(sender);
+		int32_t bytes = recvfrom(this->socket_handle_, buf, len, 0, (sockaddr*)&sender, &sender_length);
+		if (bytes == SOCKET_ERROR)
+		{
+			LOGERROR("Failed to receive packet: %d %s", GetLastError(), getLastErrorString());
+			return ion::Error::Get(ion::Error::SOCKET);
+		}
+
+		if (src_sddress)
+		{
+			const char* ip_string = inet_ntoa(sender.sin_addr);
+			(*src_sddress) = IpAddress(sender.sin_addr.S_un.S_addr);
+		}
 	}
 } //namespace ion
