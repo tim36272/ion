@@ -39,4 +39,4 @@
 .suo
 *.db
 *.opendb
-*.user
+*.vcxproj.user
