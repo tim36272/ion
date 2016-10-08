@@ -14,33 +14,23 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef ION_FILE_H_
-#define ION_FILE_H_
-#include <string>
-#include <set>
+#include <random>
+#include "ionlib/math.h"
 namespace ion
 {
-	class Error
+	double randlf(double low, double high)
 	{
-	public:
-		enum status_t
-		{
-			SUCCESS,
-			PARAMETER,
-			PARAMETER_VALUE,
-			SOCKET,
-			QUEUE_EMPTY
-		};
-		Error() = delete;
-		Error(Error::status_t id, std::string explanation);
-		static Error Get(Error::status_t status);
-		bool operator==(const ion::Error& rhs) const;
-		bool operator <(const ion::Error& rhs) const;
-	private:
-		//This consturctor is private because no one should be allowed to construct an invalid (incomplete) error except the library
-		Error(Error::status_t id);
-		Error::status_t id_;
-		std::string explanation_;
-	};
+		return ((double)std::rand() / (double)RAND_MAX)*(high - low) + low;
+	}
+	size_t randull(size_t low, size_t high)
+	{
+		return llround(((double)std::rand() / (double)RAND_MAX)*(high - low) + low);
+	}
+
+	double random_normal_distribution(double mean, double std)
+	{
+		std::normal_distribution<double> distribution(mean, std);
+		std::default_random_engine generator;
+		return distribution(generator);
+	}
 };
-#endif //ION_FILE_H_

@@ -21,11 +21,7 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 namespace ion
 {
-	ion::UdpSocket::UdpSocket()
-	{
-		this->socket_handle_ = INVALID_SOCKET;
-	}
-	ion::Error ion::InitSockets()
+	ion::Error InitSockets()
 	{
 		//start Windows socket handling and request Winsock Version 2.2
 		WSAData wsa_data;
@@ -44,7 +40,11 @@ namespace ion
 		}
 		return ion::Error::Get(ion::Error::SUCCESS);
 	}
-	void ion::StopSockets()
+	ion::UdpSocket::UdpSocket()
+	{
+		this->socket_handle_ = INVALID_SOCKET;
+	}
+	void StopSockets()
 	{
 		WSACleanup();
 	}
@@ -114,8 +114,8 @@ namespace ion
 
 		if (src_sddress)
 		{
-			const char* ip_string = inet_ntoa(sender.sin_addr);
 			(*src_sddress) = IpAddress(sender.sin_addr.S_un.S_addr);
 		}
+		return ion::Error::Get(ion::Error::SUCCESS);
 	}
 } //namespace ion

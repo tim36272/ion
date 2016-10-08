@@ -36,12 +36,13 @@ namespace ion
 	}
 	void AppFail(int32_t result)
 	{
-		ion::LogClose();
-#ifndef NDEBUG
-		__debugbreak();
-#endif
 		fflush(stdout);
 		fflush(stderr);
-		exit(result);
+#ifndef NDEBUG
+		__debugbreak();
+#else
+		while (true);
+#endif
+
 	}
 } //namespace ion

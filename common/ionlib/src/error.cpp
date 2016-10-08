@@ -22,13 +22,19 @@ std::set<ion::Error> all_errors = {
 	{ ion::Error::SUCCESS,"No error occurred" },
 	{ ion::Error::PARAMETER,"Parameter was invalid" },
 	{ ion::Error::PARAMETER_VALUE,"Parameter value was out of range" },
-	{ ion::Error::SOCKET, "SOcket error"}
+	{ ion::Error::SOCKET, "Socket error"},
+	{ ion::Error::QUEUE_EMPTY, "Queue was empty"}
 };
 
 ion::Error::Error(ion::Error::status_t id, std::string explanation)
 {
 	this->id_ = id;
 	this->explanation_ = explanation;
+}
+
+ion::Error::Error(ion::Error::status_t id)
+{
+	this->id_ = id;
 }
 ion::Error ion::Error::Get(ion::Error::status_t status)
 {
@@ -38,7 +44,12 @@ ion::Error ion::Error::Get(ion::Error::status_t status)
 	return *it;
 }
 
-bool ion::Error::operator==(const ion::Error & rhs)
+bool ion::Error::operator <(const ion::Error & rhs) const
+{
+	return (rhs.id_ < this->id_);
+}
+
+bool ion::Error::operator==(const ion::Error & rhs) const
 {
 	return (rhs.id_ == this->id_);
 }

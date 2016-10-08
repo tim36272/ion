@@ -45,6 +45,15 @@
     <ClInclude Include="..\..\inc\ionlib\math.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\state_machine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\data_pump.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\genetic_algorithm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\app_util.cpp">
@@ -59,10 +68,10 @@
     <ClCompile Include="..\..\src\ip_address.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\tree.cpp">
+    <ClCompile Include="..\..\src\error.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\error.cpp">
+    <ClCompile Include="..\..\src\math.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

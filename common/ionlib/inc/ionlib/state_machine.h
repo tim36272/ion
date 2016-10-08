@@ -14,33 +14,34 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef ION_FILE_H_
-#define ION_FILE_H_
-#include <string>
-#include <set>
+#ifndef ION_STATE_MACHINE_H_
+#define ION_STATE_MACHINE_H_
+#include <stdint.h>
+#include <vector>
+#include "ionlib/error.h"
 namespace ion
 {
-	class Error
+	class State
 	{
 	public:
-		enum status_t
-		{
-			SUCCESS,
-			PARAMETER,
-			PARAMETER_VALUE,
-			SOCKET,
-			QUEUE_EMPTY
-		};
-		Error() = delete;
-		Error(Error::status_t id, std::string explanation);
-		static Error Get(Error::status_t status);
-		bool operator==(const ion::Error& rhs) const;
-		bool operator <(const ion::Error& rhs) const;
+		virtual ion::Error Initialize() = 0;
+		virtual ion::Error Spin() = 0;
+		virtual ion::Error TransitionTo(ion::State* state) = 0;
+		virtual ion::Error TransitionFrom(ion::State* state) = 0;
 	private:
-		//This consturctor is private because no one should be allowed to construct an invalid (incomplete) error except the library
-		Error(Error::status_t id);
-		Error::status_t id_;
-		std::string explanation_;
+		uint32_t id_;
+	};
+	class StateMachine
+	{
+	public:
+		virtual ion::Error ChangeState(ion::State* state) = 0;
+		virtual ion::State* GetState()
+		{
+			return current_state_;
+		}
+	private:
+		std::vector<ion::State> states_;
+		ion::State* current_state_;
 	};
 };
-#endif //ION_FILE_H_
+#endif //ION_STATE_MACHINE_H_
