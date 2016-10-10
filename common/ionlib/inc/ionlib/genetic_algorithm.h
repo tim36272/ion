@@ -23,7 +23,73 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #include "ionlib/log.h"
 namespace ion
 {
+	template <class T>
 	class GeneticAlgorithm
+	{
+	public:
+		GeneticAlgorithm(size_t num_members, size_t chromosome_length, double mutation_probability, double crossover_probability)
+		{
+			if (chromosome_length > RAND_MAX || num_members > RAND_MAX)
+			{
+				LOGFATAL("Your chromosome or population size is greater than RAND_MAX, so the random number generator will never select some members");
+			}
+			mutation_probability_ = mutation_probability;
+			crossover_probability_ = crossover_probability;
+			population_.reserve(num_members);
+			fitness_.resize(num_members);
+			num_evaluations_ = 0;
+			for (uint32_t member_index = 0; member_index < num_members; ++member_index)
+			{
+				T member;
+				population_.push_back(member);
+			}
+		}
+		virtual void Mutate() = 0;
+		virtual void Select() = 0;
+		void NextGeneration()
+		{
+			//do fitness proportional selection
+			Select();
+			Mutate();
+			EvaluateMembers();
+		}
+		double GetAverageFitness()
+		{
+			return std::accumulate(fitness_.begin(), fitness_.end(), 0.0) / fitness_.size();
+		}
+		double GetMaxFitness()
+		{
+			return *(std::max_element(fitness_.begin(), fitness_.end()));
+		}
+		T GetEliteMember()
+		{
+			std::vector<double>::iterator elite_it = std::max_element(fitness_.begin(), fitness_.end());
+			return population_[elite_it - fitness_.begin()];
+		}
+		double GetMinFitness()
+		{
+			return *(std::min_element(fitness_.begin(), fitness_.end()));
+		}
+		T GetWorstMember()
+		{
+			size_t worst_index = std::min_element(fitness_.begin(), fitness_.end()) - fitness_.begin();
+			return population_[worst_index];
+
+		}
+		uint32_t GetNumEvals()
+		{
+			return num_evaluations_;
+		}
+		virtual void EvaluateMembers() = 0;
+	protected:
+		std::vector<T> population_;
+		std::vector<double> fitness_;
+		double mutation_probability_;
+		double crossover_probability_;
+		uint32_t num_evaluations_;
+	};
+	template <>
+	class GeneticAlgorithm<std::vector<bool>>
 	{
 	public:
 		GeneticAlgorithm(size_t num_members, size_t chromosome_length, double mutation_probability, double crossover_probability)
@@ -48,7 +114,7 @@ namespace ion
 				population_.push_back(member);
 			}
 		}
-		void Mutate()
+		virtual void Mutate()
 		{
 			//we start with the second element because we are doing elite selection
 			for (std::vector<std::vector<bool>>::iterator member_it = population_.begin()+1; member_it != population_.end(); ++member_it)
@@ -64,7 +130,7 @@ namespace ion
 				}
 			}
 		}
-		void Select()
+		virtual void Select()
 		{
 			//note that the fitnesses must already be set
 			//get the total fitness

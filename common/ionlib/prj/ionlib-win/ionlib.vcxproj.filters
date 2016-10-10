@@ -54,6 +54,9 @@
     <ClInclude Include="..\..\inc\ionlib\genetic_algorithm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\geometry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\app_util.cpp">

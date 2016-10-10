@@ -151,6 +151,7 @@
     <ClInclude Include="..\..\inc\ionlib\data_pump.h" />
     <ClInclude Include="..\..\inc\ionlib\error.h" />
     <ClInclude Include="..\..\inc\ionlib\genetic_algorithm.h" />
+    <ClInclude Include="..\..\inc\ionlib\geometry.h" />
     <ClInclude Include="..\..\inc\ionlib\ip_address.h" />
     <ClInclude Include="..\..\inc\ionlib\log.h" />
     <ClInclude Include="..\..\inc\ionlib\math.h" />
