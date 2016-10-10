@@ -34,6 +34,8 @@ namespace ion
 			ion::AppFail(-1);
 			return false;
 		}
+		//test the log
+		LOGINFO("Logging to %s", log_file_name);
 		return true;
 	}
 	void LogClose()
