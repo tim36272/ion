@@ -26,10 +26,14 @@ namespace ion
 		enum status_t
 		{
 			SUCCESS,
+			UNKNOWN,
 			PARAMETER,
 			PARAMETER_VALUE,
 			SOCKET,
-			QUEUE_EMPTY
+			QUEUE_EMPTY,
+			//semaphores
+			TIMEOUT,
+			ABANDONED
 		};
 		Error() = delete;
 		Error(Error::status_t id, std::string explanation);

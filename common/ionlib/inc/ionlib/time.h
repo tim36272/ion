@@ -16,9 +16,14 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef ION_TIME_H_
 #define ION_TIME_H_
+#include <stdint.h>
 namespace ion
 {
-	double TimeGet();
-	double TimeGetEpoch();
+	void TimeInit(); //will be called by backend if the user doesn't call it, you can call this manually if you care about the first measurement being as accurate as possible
+	double TimeGet(); //fast-query timer, may be the number of seconds since the program started
+	double TimeGetEpoch(); //time that gives time since January 1, 1970 at midnight
+
+	void ThreadSleep(uint32_t milliseconds);
+
 }
 #endif //ION_TIME_H_

@@ -15,6 +15,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ionalgolib", "..\..\common\ionalgolib\prj\ionalgolib-win\ionalgolib.vcxproj", "{3C0F091F-6E20-4805-8F5C-34B63879992A}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sentry-win", "..\..\app\sentry\prj\sentry-win\sentry-win.vcxproj", "{ED3590CB-9704-4E9B-93A3-590BBD494E89}"
+	ProjectSection(ProjectDependencies) = postProject
+		{473E809F-98A8-4A92-A204-8A40775C3875} = {473E809F-98A8-4A92-A204-8A40775C3875}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

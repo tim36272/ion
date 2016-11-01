@@ -148,27 +148,39 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\ionlib\app_util.h" />
+    <ClInclude Include="..\..\inc\ionlib\config.h" />
     <ClInclude Include="..\..\inc\ionlib\data_pump.h" />
     <ClInclude Include="..\..\inc\ionlib\error.h" />
     <ClInclude Include="..\..\inc\ionlib\genetic_algorithm.h" />
     <ClInclude Include="..\..\inc\ionlib\geometry.h" />
+    <ClInclude Include="..\..\inc\ionlib\iondef.h" />
     <ClInclude Include="..\..\inc\ionlib\ip_address.h" />
     <ClInclude Include="..\..\inc\ionlib\log.h" />
     <ClInclude Include="..\..\inc\ionlib\math.h" />
+    <ClInclude Include="..\..\inc\ionlib\matrix.h" />
+    <ClInclude Include="..\..\inc\ionlib\mutex.h" />
     <ClInclude Include="..\..\inc\ionlib\net.h" />
     <ClInclude Include="..\..\inc\ionlib\queue.h" />
+    <ClInclude Include="..\..\inc\ionlib\semaphore.h" />
     <ClInclude Include="..\..\inc\ionlib\state_machine.h" />
+    <ClInclude Include="..\..\inc\ionlib\multithread.h" />
     <ClInclude Include="..\..\inc\ionlib\thread.h" />
     <ClInclude Include="..\..\inc\ionlib\time.h" />
+    <ClInclude Include="..\..\inc\ionlib\timer.h" />
     <ClInclude Include="..\..\inc\ionlib\tree.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\app_util.cpp" />
+    <ClCompile Include="..\..\src\config.cpp" />
     <ClCompile Include="..\..\src\error.cpp" />
     <ClCompile Include="..\..\src\ip_address.cpp" />
     <ClCompile Include="..\..\src\log.cpp" />
     <ClCompile Include="..\..\src\math.cpp" />
+    <ClCompile Include="..\..\src\mutex.cpp" />
     <ClCompile Include="..\..\src\net-win.cpp" />
+    <ClCompile Include="..\..\src\semaphore.cpp" />
+    <ClCompile Include="..\..\src\thread.cpp" />
+    <ClCompile Include="..\..\src\time.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -14,11 +14,24 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef ION_THREAD_H_
-#define ION_THREAD_H_
+#ifndef ION_MUTEX_H_
+#define ION_MUTEX_H_
+#include <stdint.h>
+#include "ionlib/error.h"
+#include "ionlib/multithread.h"
+struct mutex_t;
 namespace ion
 {
-	typedef void(*thread_ptr)(void*);
-	void StartThread(thread_ptr entry_point, void* usrdata);
-}
-#endif //ION_THREAD_H_
+	class Mutex
+	{
+	public:
+		Mutex(bool init_locked = false);
+		Mutex(bool init_locked, const char* name);
+		ion::Error Lock(uint32_t timeout = TIMEOUT_INFINITE);
+		ion::Error Unlock(); //timeout in milliseconds
+	private:
+		//this is a PIMPL (http://stackoverflow.com/questions/60570/why-should-the-pimpl-idiom-be-used) for cross-platform portability
+		mutex_t* mutex_handle_;
+	};
+};
+#endif //ION_MUTEX_H_

@@ -30,37 +30,71 @@ namespace ion
 	public:
 		uint32_t id;
 		std::shared_ptr<T> data;
+		PumpMessage()
+		{
+		}
+		PumpMessage(uint32_t id_in, T item)
+		{
+			id = id_in;
+			data = std::make_shared<T>(item);
+		}
 	};
 
 	template <class T>
 	class DataPump
 	{
 	public:
-		DataPump() : lock_(mutex_)
+		DataPump()
 		{
 
 		}
-		void Pump(ion::PumpMessage<T>* msg)
+		void Pump(ion::PumpMessage<T> msg)
 		{
-			queue_.push(msg);
-		}
-		ion::Error Wait(std::chrono::duration timeout)
-		{
-			cv_.wait_for(lock_, timeout, []
 			{
-				return !queue_.empty();
-			});
+				std::lock_guard<std::mutex> lk(mutex_);
+				queue_.push(msg);
+			}
+			cv_.notify_one();
+
+		}
+		ion::Error Wait(uint32_t milliseconds, ion::PumpMessage<T>* item)
+		{
+			std::chrono::duration<double> timeout;
+			//get chrono duration
+			if (milliseconds == 0)
+			{
+				timeout = std::chrono::duration<int32_t, std::milli>::max();
+			} else
+			{
+				timeout = std::chrono::duration<int32_t, std::milli>(milliseconds);
+			}
+			std::unique_lock<std::mutex> lk(mutex_);
+			ion::Error result = ion::Error::Get(ion::Error::SUCCESS);
 			if (queue_.empty())
 			{
-				return 
+				//wait for an item
+				cv_.wait_for(lk, timeout, [=]
+				{
+					return !this->queue_.empty();
+				});
 			}
+
+			if (queue_.empty())
+			{
+				result = ion::Error::Get(ion::Error::TIMEOUT);
+			} else
+			{
+				*item = queue_.front();
+				queue_.pop();
+				result = ion::Error::Get(ion::Error::SUCCESS);
+			}
+			lk.unlock();
+			return result;
 		}
-		ion::Error
 	private:
 		std::condition_variable cv_;
 		std::mutex mutex_;
-		std::unique_lock<std::mutex> lock_;
-		std::queue<ion::PumpMessage<T>*> queue_;
+		std::queue<ion::PumpMessage<T>> queue_;
 	};
 };
 #endif //ION_DATA_PUMP_H_

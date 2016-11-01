@@ -14,11 +14,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef ION_THREAD_H_
-#define ION_THREAD_H_
+#include "ionlib/thread.h"
+#include <Windows.h>
 namespace ion
 {
-	typedef void(*thread_ptr)(void*);
-	void StartThread(thread_ptr entry_point, void* usrdata);
-}
-#endif //ION_THREAD_H_
+	void StartThread(thread_ptr entry_point, void* usrdata)
+	{
+		CreateThread(0, 0, (LPTHREAD_START_ROUTINE)entry_point, usrdata, 0, 0);
+	}
+};

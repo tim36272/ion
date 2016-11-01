@@ -23,7 +23,8 @@ std::set<ion::Error> all_errors = {
 	{ ion::Error::PARAMETER,"Parameter was invalid" },
 	{ ion::Error::PARAMETER_VALUE,"Parameter value was out of range" },
 	{ ion::Error::SOCKET, "Socket error"},
-	{ ion::Error::QUEUE_EMPTY, "Queue was empty"}
+	{ ion::Error::QUEUE_EMPTY, "Queue was empty"},
+	{ ion::Error::TIMEOUT, "A timeout ocurred"}
 };
 
 ion::Error::Error(ion::Error::status_t id, std::string explanation)

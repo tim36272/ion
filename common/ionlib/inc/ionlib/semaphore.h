@@ -14,11 +14,24 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef ION_THREAD_H_
-#define ION_THREAD_H_
+#ifndef ION_SEMAPHORE_H_
+#define ION_SEMAPHORE_H_
+#include <stdint.h>
+#include "ionlib/error.h"
+#include "ionlib/multithread.h"
+struct semaphore_t;
 namespace ion
 {
-	typedef void(*thread_ptr)(void*);
-	void StartThread(thread_ptr entry_point, void* usrdata);
-}
-#endif //ION_THREAD_H_
+	class Semaphore
+	{
+	public:
+		Semaphore(uint32_t count, uint32_t max);
+		Semaphore(uint32_t count, uint32_t max, const char* name);
+		ion::Error Post();
+		ion::Error Wait(uint32_t timeout = TIMEOUT_INFINITE); //timeout in milliseconds
+	private:
+		//this is a PIMPL (http://stackoverflow.com/questions/60570/why-should-the-pimpl-idiom-be-used) for cross-platform portability
+		semaphore_t* semaphore_handle_;
+	};
+};
+#endif //ION_SEMAPHORE_H_

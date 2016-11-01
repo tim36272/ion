@@ -14,11 +14,23 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef ION_THREAD_H_
-#define ION_THREAD_H_
+#ifndef ION_CONFIG_H_
+#define ION_CONFIG_H_
+#include <vector>
+#include <utility>
+
+#define CONFIG_KEY_MAX_LENGTH 64
+#define CONFIG_VALUE_MAX_LENGTH 128
+
+typedef std::pair<char[CONFIG_KEY_MAX_LENGTH], char[CONFIG_VALUE_MAX_LENGTH]> ConfigItem_t;
 namespace ion
 {
-	typedef void(*thread_ptr)(void*);
-	void StartThread(thread_ptr entry_point, void* usrdata);
-}
-#endif //ION_THREAD_H_
+	class Config
+	{
+	public:
+		Config(const char* filename);
+	private:
+		std::vector<ConfigItem_t> items;
+	};
+};
+#endif //ION_FILE_H_

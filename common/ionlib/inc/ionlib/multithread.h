@@ -14,11 +14,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef ION_THREAD_H_
-#define ION_THREAD_H_
-namespace ion
-{
-	typedef void(*thread_ptr)(void*);
-	void StartThread(thread_ptr entry_point, void* usrdata);
-}
-#endif //ION_THREAD_H_
+#ifndef ION_SYNCHRONIZATION_H_
+#define ION_SYNCHRONIZATION_H_
+
+#define TIMEOUT_INFINITE ((uint32_t)(-1))
+#include "ionlib/semaphore.h"
+#include "ionlib/mutex.h"
+#include "ionlib/thread.h"
+#endif //ION_SYNCHRONIZATION_H_
