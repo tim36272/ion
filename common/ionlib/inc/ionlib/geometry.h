@@ -32,6 +32,11 @@ namespace ion
 			x1_ = x1;
 			x2_ = x2;
 		}
+		Point2(const Point2<T> & rhs)
+		{
+			x1_ = rhs.x1_;
+			x2_ = rhs.x2_;
+		}
 		Point2<T> operator+(const Point2<T>& rhs)
 		{
 			Point2<T> result;
@@ -58,6 +63,14 @@ namespace ion
 			double dx = this->x1_ - rhs.x1_;
 			double dy = this->x2_ - rhs.x2_;
 			result = sqrt(dx*dx + dy*dy);
+			return result;
+		}
+		double distance_sq(const Point2<T>& rhs)
+		{
+			double result;
+			double dx = this->x1_ - rhs.x1_;
+			double dy = this->x2_ - rhs.x2_;
+			result = dx*dx + dy*dy;
 			return result;
 		}
 		T x1_;
