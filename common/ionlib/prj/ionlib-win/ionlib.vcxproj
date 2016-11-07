@@ -176,6 +176,7 @@
     <ClCompile Include="..\..\src\ip_address.cpp" />
     <ClCompile Include="..\..\src\log.cpp" />
     <ClCompile Include="..\..\src\math.cpp" />
+    <ClCompile Include="..\..\src\matrix.cpp" />
     <ClCompile Include="..\..\src\mutex.cpp" />
     <ClCompile Include="..\..\src\net-win.cpp" />
     <ClCompile Include="..\..\src\semaphore.cpp" />
