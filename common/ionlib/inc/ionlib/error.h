@@ -14,8 +14,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef ION_FILE_H_
-#define ION_FILE_H_
+#ifndef ION_ERROR_H_
+#define ION_ERROR_H_
 #include <string>
 #include <set>
 namespace ion
@@ -47,4 +47,4 @@ namespace ion
 		std::string explanation_;
 	};
 };
-#endif //ION_FILE_H_
+#endif //ION_ERROR_H_

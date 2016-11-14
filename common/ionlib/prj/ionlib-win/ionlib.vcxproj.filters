@@ -13,70 +13,100 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\Math">
+      <UniqueIdentifier>{7d05fea3-6409-444d-ba4f-edd9bedd121b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Math\Private">
+      <UniqueIdentifier>{63a22a86-e4f1-40fa-8fac-45bcadea064e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\OS">
+      <UniqueIdentifier>{9022180d-a54f-40e0-b9eb-7fc344ea1f00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Data Structures">
+      <UniqueIdentifier>{eb88f021-575a-4af1-b594-c865dc324dc5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Util">
+      <UniqueIdentifier>{f8aed27a-9d66-4ac4-bd69-2ba0060f2c2c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Advanced">
+      <UniqueIdentifier>{f51ef7ce-129c-4abf-84a9-13b137507afd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\inc\ionlib\thread.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\..\inc\ionlib\matrix_arithmetic.h">
+      <Filter>Header Files\Math\Private</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\ionlib\time.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\..\inc\ionlib\matrix_basic.h">
+      <Filter>Header Files\Math\Private</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\ionlib\queue.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\..\inc\ionlib\matrix_filtering.h">
+      <Filter>Header Files\Math\Private</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\ionlib\app_util.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\ionlib\log.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\ionlib\net.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\ionlib\ip_address.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\ionlib\tree.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\ionlib\error.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\ionlib\math.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\ionlib\state_machine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\ionlib\data_pump.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\ionlib\genetic_algorithm.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\..\inc\ionlib\matrix_serialization.h">
+      <Filter>Header Files\Math\Private</Filter>
     </ClInclude>
     <ClInclude Include="..\..\inc\ionlib\geometry.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Math</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\ionlib\semaphore.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\ionlib\mutex.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\ionlib\multithread.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\ionlib\timer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\ionlib\config.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\ionlib\iondef.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\..\inc\ionlib\math.h">
+      <Filter>Header Files\Math</Filter>
     </ClInclude>
     <ClInclude Include="..\..\inc\ionlib\matrix.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\ip_address.h">
+      <Filter>Header Files\OS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\log.h">
+      <Filter>Header Files\OS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\multithread.h">
+      <Filter>Header Files\OS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\mutex.h">
+      <Filter>Header Files\OS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\net.h">
+      <Filter>Header Files\OS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\error.h">
+      <Filter>Header Files\Data Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\queue.h">
+      <Filter>Header Files\Data Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\semaphore.h">
+      <Filter>Header Files\OS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\time.h">
+      <Filter>Header Files\OS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\app_util.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\config.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\data_pump.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\iondef.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\timer.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\tree.h">
+      <Filter>Header Files\Data Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\thread.h">
+      <Filter>Header Files\OS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\state_machine.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\genetic_algorithm.h">
+      <Filter>Header Files\Advanced</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -113,7 +143,7 @@
     <ClCompile Include="..\..\src\config.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\matrix.cpp">
+    <ClCompile Include="..\..\src\matrix_implementation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

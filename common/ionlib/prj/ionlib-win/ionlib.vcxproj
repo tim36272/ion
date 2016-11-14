@@ -158,6 +158,10 @@
     <ClInclude Include="..\..\inc\ionlib\log.h" />
     <ClInclude Include="..\..\inc\ionlib\math.h" />
     <ClInclude Include="..\..\inc\ionlib\matrix.h" />
+    <ClInclude Include="..\..\inc\ionlib\matrix_arithmetic.h" />
+    <ClInclude Include="..\..\inc\ionlib\matrix_basic.h" />
+    <ClInclude Include="..\..\inc\ionlib\matrix_filtering.h" />
+    <ClInclude Include="..\..\inc\ionlib\matrix_serialization.h" />
     <ClInclude Include="..\..\inc\ionlib\mutex.h" />
     <ClInclude Include="..\..\inc\ionlib\net.h" />
     <ClInclude Include="..\..\inc\ionlib\queue.h" />
@@ -176,7 +180,7 @@
     <ClCompile Include="..\..\src\ip_address.cpp" />
     <ClCompile Include="..\..\src\log.cpp" />
     <ClCompile Include="..\..\src\math.cpp" />
-    <ClCompile Include="..\..\src\matrix.cpp" />
+    <ClCompile Include="..\..\src\matrix_implementation.cpp" />
     <ClCompile Include="..\..\src\mutex.cpp" />
     <ClCompile Include="..\..\src\net-win.cpp" />
     <ClCompile Include="..\..\src\semaphore.cpp" />

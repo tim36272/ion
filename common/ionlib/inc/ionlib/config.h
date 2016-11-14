@@ -33,4 +33,4 @@ namespace ion
 		std::vector<ConfigItem_t> items;
 	};
 };
-#endif //ION_FILE_H_
+#endif //ION_CONFIG_H_

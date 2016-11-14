@@ -14,8 +14,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef ION_FILE_H_
-#define ION_FILE_H_
+#ifndef ION_GEOMETRY_H_
+#define ION_GEOMETRY_H_
 namespace ion
 {
 	template <class T>
@@ -77,4 +77,4 @@ namespace ion
 		T x2_;
 	};
 };
-#endif //ION_FILE_H_
+#endif //ION_GEOMETRY_H_
