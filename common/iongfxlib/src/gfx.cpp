@@ -186,7 +186,7 @@ namespace ion
 		}
 
 		//attempt to initialize the rendering context
-
+		opengl_context_ = new(WindowOpenglContext_t);
 		opengl_context_->hrc = wglCreateContext(device_contex_->hdc);
 		if (opengl_context_->hrc == NULL)
 		{

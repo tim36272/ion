@@ -33,6 +33,8 @@ namespace ion
 		WindowDeviceContext_t* device_contex_;
 		struct WindowOpenglContext_t;
 		WindowOpenglContext_t* opengl_context_;
+		struct WindowInstance_t;
+		WindowInstance_t* instance_;
 	private:
 		void CreateOpenGLContext();
 	};

@@ -48,5 +48,9 @@ namespace ion
 	{
 		HGLRC hrc;
 	};
+	struct Gfx::WindowInstance_t
+	{
+		HINSTANCE hInstance;
+	};
 };
 #endif //ION_FILE_H_
