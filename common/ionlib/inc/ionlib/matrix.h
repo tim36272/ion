@@ -51,19 +51,25 @@ namespace ion
 		Matrix(uint32_t rows, uint32_t cols = 1, uint32_t pages = 1);
 		void Resize(uint32_t rows, uint32_t cols = 1, uint32_t pages = 1);
 		void DeepCopyTo(Matrix& rhs);
+		Matrix DeepCopy();
 		void Swap(Matrix& rhs);
 		template <class OtherType>
 		void Cast(Matrix<OtherType> rhs);
 		void Reshape(uint32_t new_rows, uint32_t new_cols = 1, uint32_t new_pages = 1);
 		void Set(T val, uint32_t x, uint32_t y = 0, uint32_t z = 0);
 		void SetAll(T val);
-		T At(uint32_t x, uint32_t y = 0, uint32_t z = 0);
+		T& At(uint32_t x, uint32_t y = 0, uint32_t z = 0);
+		const T& At(uint32_t x, uint32_t y = 0, uint32_t z = 0) const;
 		void Zero();
 		void Eye();
-		Matrix Roi(uint32_t row_start, int64_t num_rows, uint32_t col_start, int64_t num_cols, uint32_t page_start, int64_t num_pages);
+		void Rand(double min, double max);
+		Matrix Roi(uint32_t row_start, int64_t num_rows, uint32_t col_start=0, int64_t num_cols=0, uint32_t page_start=0, int64_t num_pages=0);
 		uint32_t rows();
 		uint32_t cols();
 		uint32_t pages();
+		void Rowcat(const Matrix& rhs);
+		void Colcat(const Matrix& rhs);
+		void Pagecat(const Matrix& rhs);
 		//serialization
 		void PrintAscii(std::ostream& stream);
 		void DumpBinary(std::ostream& stream);
@@ -80,9 +86,13 @@ namespace ion
 		T Sum();
 		typedef T(*foreach_t)(T);
 		typedef T(*foreachPair_t)(T, T);
+		//call function foreach on each element and store the result in result
 		void Foreach(foreach_t foreach, Matrix<T>* result);
+		//call function foreach on corresponding pairs of *this and rhs and store the result in result
 		void Foreach(foreachPair_t foreach, const Matrix<T>& rhs, Matrix<T>* result);
+		//call function foreach on each element along with constant and store the result in result
 		void Foreach(foreachPair_t foreach, T constant, Matrix<T>* result);
+		//vall function foreach on each element along with constant (notice constant can be modified)
 		void Foreach(foreachPair_t foreach, T* constant);
 		Matrix operator+(const Matrix& rhs);
 		Matrix operator-(const Matrix& rhs);
@@ -96,15 +106,18 @@ namespace ion
 		//filtering
 		enum class ConvFlag
 		{
-			CONV_FLAG_ZERO_PAD = 0,
-			CONV_FLAG_MIRROR = 1,
-			CONV_FLAG_COPY = 2,
-			CONV_FLAG_WRAPAROND = 3
+			CONV_FLAG_ZERO_PAD = 1,
+			CONV_FLAG_MIRROR = 2,
+			CONV_FLAG_COPY = 4,
+			CONV_FLAG_WRAPAROND = 8,
+			CONV_FLAG_SPARSE_Z = 16
 		};
 		template <class U>
 		friend ion::Matrix<U> Convolve(ion::Matrix<U> mat, ion::Matrix<U> kernel, typename ion::Matrix<U>::ConvFlag flags);
 		template <class U>
 		friend bool indexInPad(Matrix<U> mat_padded, Matrix<U> kernel, uint32_t row, uint32_t col, uint32_t page);
+		template <class U>
+		friend ion::Matrix<U> MaxPool(ion::Matrix<U> mat, uint32_t pool_size);
 	private:
 		Matrix() { } //default construction is only allowed by the library so this is private
 		//size of the non-roi matrix. It is guaranteed that (data_ + rows_*cols_*pages_) is the last element if !is_roi_
@@ -129,8 +142,5 @@ namespace ion
 	template <class T>
 	std::ostream& operator<< (std::ostream& out, ion::Matrix<T>& mat);
 }; //namespace ion
-
-//explicitly instantiate this class for type double. This is what lets us put the implementations into a CPP file instead of a header file
-template class ion::Matrix<double>;
 
 #endif //ION_MATRIX_H_

@@ -14,36 +14,25 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
-#include "ionlib\app_util.h"
-#include "ionlib\log.h"
-#include "ionlib\net.h"
-#include <intrin.h>
-#include <stdio.h>
+#ifndef ION_BYTESWAP_H_
+#define ION_BYTESWAP_H_
+#include <stdint.h>
+#include "ionlib/log.h"
 namespace ion
 {
-	bool AppInit(const char* log_file_name)
+	void byteswap(uint8_t* val, uint8_t bytes)
 	{
-		bool result = true;
-		if (!ion::LogInit(log_file_name))
+		if (bytes == 1)
 		{
-			result = false;
+			return;
 		}
-		return result;
-	}
-	void AppClose()
-	{
-		ion::LogClose();
-		AppFail(-1);
-	}
-	void AppFail(int32_t result)
-	{
-		fflush(stdout);
-		fflush(stderr);
-#ifndef NDEBUG
-		__debugbreak();
-#else
-		while (true);
-#endif
-
+		LOGASSERT(bytes % 2 == 0);
+		for (uint8_t byte_index = 0; byte_index < bytes/2U; ++byte_index)
+		{
+			uint8_t temp = val[byte_index];
+			val[byte_index] = val[bytes - byte_index - 1];
+			val[bytes - 1 - byte_index] = temp;
+		}
 	}
 } //namespace ion
+#endif //ION_BYTESWAP_H_

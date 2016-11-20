@@ -60,6 +60,53 @@ namespace ion
 		pages_ = pages;
 	}
 	template <class T>
+	ion::Matrix<T> ion::Matrix<T>::DeepCopy()
+	{
+		ion::Matrix<T> rhs(rows_, cols_, pages_);
+		//this function is ROI-safe
+		//if the input is an ROI, the result will be deep coppied into the parent's data (i.e. it is still an ROI)
+		if (continuous_ && rhs.continuous_)
+		{
+			//Note it is NOT necessary that rows_*cols_*pages_ == allocated_cells_
+			//The MAT_INDEX is added in case roi_row_origin_ != 0
+			memcpy(rhs.data_ + MAT_INDEX(rhs, 0, 0, 0), data_ + MAT_INDEX(*this, 0, 0, 0), rows_*cols_*pages_);
+			return;
+		} else
+		{
+			//do it the hard way. We still might be able to optimize part of it, though
+			//Notice that, even though it would work, I don't allow it to do this if pages_==1 because it would be more efficient to just assign everything
+			if (pages_ != 1 && ((pages_ == allocated_pages_) && (rhs.pages_ == rhs.allocated_pages_)))
+			{
+				//this means we can copy each *column* via memcpy
+				//it is implicit that we can't copy each row otherwise continuous_ would have been set
+				for (uint32_t row_index = 0; row_index < rows_; ++row_index)
+				{
+					for (uint32_t col_index = 0; col_index < cols_; ++col_index)
+					{
+						//compute where this column starts at
+						size_t col_start = MAT_INDEX(*this, row_index, col_index, 0);
+						size_t rhs_col_start = MAT_INDEX(rhs, row_index, col_index, 0);
+						memcpy(rhs.data_ + rhs_col_start, data_ + col_start, pages_ * sizeof(*data_));
+					}
+				}
+			} else
+			{
+				//do it the really hard way
+				for (uint32_t row_index = 0; row_index < rows_; ++row_index)
+				{
+					for (uint32_t col_index = 0; col_index < cols_; ++col_index)
+					{
+						for (uint32_t page_index = 0; page_index < pages_; ++page_index)
+						{
+							rhs.data_[MAT_INDEX(rhs, row_index, col_index, page_index)] = data_[MAT_INDEX(*this, row_index, col_index, page_index)];
+						}
+					}
+				}
+			}
+		}
+		return rhs;
+	}
+	template <class T>
 	void ion::Matrix<T>::DeepCopyTo(Matrix& rhs)
 	{
 		LOGASSERT(rows_ == rhs.rows_);
@@ -189,7 +236,13 @@ namespace ion
 		}
 	}
 	template <class T>
-	T ion::Matrix<T>::At(uint32_t x, uint32_t y = 0, uint32_t z = 0)
+	T& ion::Matrix<T>::At(uint32_t x, uint32_t y = 0, uint32_t z = 0)
+	{
+		//this function is ROI-safe
+		return data_[MAT_INDEX(*this, x, y, z)];
+	}
+	template <class T>
+	const T& ion::Matrix<T>::At(uint32_t x, uint32_t y = 0, uint32_t z = 0) const
 	{
 		//this function is ROI-safe
 		return data_[MAT_INDEX(*this, x, y, z)];
@@ -229,6 +282,21 @@ namespace ion
 		for (uint32_t row_index = 0; row_index < rows_; ++row_index)
 		{
 			data_[MAT_INDEX(*this, row_index, row_index, 1)] = static_cast <T>(1);
+		}
+	}
+	template <class T>
+	void ion::Matrix<T>::Rand(double min, double max)
+	{
+		//this function is inplace safe
+		for (uint32_t row = 0; row < rows_; ++row)
+		{
+			for (uint32_t col = 0; col < cols_; ++col)
+			{
+				for (uint32_t page = 0; page < pages_; ++page)
+				{
+					At(row, col, page) = static_cast<T>(randlf(min, max));
+				}
+			}
 		}
 	}
 	template <class T>
@@ -308,6 +376,63 @@ namespace ion
 	{
 		//this function is ROI-safe
 		data_[MAT_INDEX(*this, x, y, z)] = val;
+	}
+	template <class T>
+	void ion::Matrix<T>::Rowcat(const Matrix<T>& rhs)
+	{
+		//this function shall only be called on an ROI and space shall be available to do the concat
+		LOGASSERT(is_roi_);
+		LOGASSERT(allocated_rows_ > roi_row_offset_ + rows_ + rhs.rows_);
+		//verify there is enough space
+		for (uint32_t row = 0; row < rhs.rows_)
+		{
+			for (uint32_t col = 0; col < rhs.cols_)
+			{
+				for (uint32_t page = 0; page < rhs.pages_)
+				{
+					this->At(rows_ + row, col, page) = rhs.At(row, col, page);
+				}
+			}
+		}
+		rows_ += rhs.rows_;
+	}
+	template <class T>
+	void ion::Matrix<T>::Colcat(const Matrix<T>& rhs)
+	{
+		//this function shall only be called on an ROI and space shall be available to do the concat
+		LOGASSERT(is_roi_);
+		LOGASSERT(allocated_cols_ > roi_col_offset_ + cols_ + rhs.cols_);
+		//verify there is enough space
+		for (uint32_t row = 0; row < rhs.rows_)
+		{
+			for (uint32_t col = 0; col < rhs.cols_)
+			{
+				for (uint32_t page = 0; page < rhs.pages_)
+				{
+					this->At(row, cols_ + col, page) = rhs.At(row, col, page);
+				}
+			}
+		}
+		cols_ += rhs.cols_;
+	}
+	template <class T>
+	void ion::Matrix<T>::Pagecat(const Matrix<T>& rhs)
+	{
+		//this function shall only be called on an ROI and space shall be available to do the concat
+		LOGASSERT(is_roi_);
+		LOGASSERT(allocated_pages_ > roi_page_offset_ + pages_ + rhs.pages_);
+		//verify there is enough space
+		for (uint32_t row = 0; row < rhs.rows_)
+		{
+			for (uint32_t col = 0; col < rhs.cols_)
+			{
+				for (uint32_t page = 0; page < rhs.pages_)
+				{
+					this->At(row, col, pages_ + page) = rhs.At(row, col, page);
+				}
+			}
+		}
+		pages_ += rhs.pages_;
 	}
 	//explicit instantiations
 

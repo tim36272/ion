@@ -18,6 +18,7 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #define ION_CONFIG_H_
 #include <vector>
 #include <utility>
+#include "ionlib/log.h"
 
 #define CONFIG_KEY_MAX_LENGTH 64
 #define CONFIG_VALUE_MAX_LENGTH 128
@@ -29,8 +30,76 @@ namespace ion
 	{
 	public:
 		Config(const char* filename);
+
+		double Getllf(const char* keyname)
+		{
+			std::vector<ConfigItem_t>::iterator item = Find(keyname);
+			if (strcmp(item->second, "DBL_MAX") == 0)
+			{
+				return DBL_MAX;
+			} else if (strcmp(item->second, "-DBL_MAX") == 0)
+			{
+				return -DBL_MAX;
+			}
+			return std::strtod(Find(keyname)->second, NULL);
+		}
+		float Getf(const char* keyname)
+		{
+			return std::strtof(Find(keyname)->second, NULL);
+		}
+		int8_t Getb(const char* keyname)
+		{
+			return (int8_t)std::strtol(Find(keyname)->second, NULL, 10);
+		}
+		uint8_t Getub(const char* keyname)
+		{
+			return (uint8_t)std::strtoul(Find(keyname)->second, NULL, 10);
+		}
+		int16_t Gets(const char* keyname)
+		{
+			return (int16_t)std::strtol(Find(keyname)->second, NULL, 10);
+		}
+		uint16_t Getus(const char* keyname)
+		{
+			return (uint16_t)std::strtoul(Find(keyname)->second, NULL, 10);
+		}
+		int32_t Getd(const char* keyname)
+		{
+			return std::strtol(Find(keyname)->second, NULL, 10);
+		}
+		uint32_t Getu(const char* keyname)
+		{
+			return std::strtoul(Find(keyname)->second, NULL, 10);
+		}
+		int64_t Getdll(const char* keyname)
+		{
+			return std::strtoll(Find(keyname)->second, NULL, 10);
+		}
+		uint64_t Getull(const char* keyname)
+		{
+			return std::strtoull(Find(keyname)->second, NULL, 10);
+		}
+		const char* Getc(const char* keyname)
+		{
+			return Find(keyname)->second;
+		}
+
+
+
 	private:
 		std::vector<ConfigItem_t> items;
+		std::vector<ConfigItem_t>::iterator Find(const char* keyname)
+		{
+			for (std::vector<ConfigItem_t>::iterator it = items.begin(); it != items.end(); ++it)
+			{
+				if (strcmp(it->first, keyname) == 0)
+				{
+					return it;
+				}
+			}
+			LOGFATAL("Didn't find %s", keyname);
+			return items.end();
+		}
 	};
 };
 #endif //ION_CONFIG_H_

@@ -108,6 +108,9 @@
     <ClInclude Include="..\..\inc\ionlib\genetic_algorithm.h">
       <Filter>Header Files\Advanced</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\byteswap.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\app_util.cpp">

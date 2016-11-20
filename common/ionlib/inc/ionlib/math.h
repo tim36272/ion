@@ -32,6 +32,8 @@ namespace ion
 #define MIN(a,b)  (((a) < (b)) ? (a) : (b))
 #endif
 
+#define FEET_TO_METERS (0.3048)
+
 	double randlf(double low, double high);
 	size_t randull(size_t low, size_t high);
 	double random_normal_distribution(double low, double high);

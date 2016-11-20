@@ -33,6 +33,10 @@ namespace ion
 			//read a character at a time, checking for special characters
 			char letter;
 			fin.get(letter);
+			if (!fin.good())
+			{
+				letter = '\0';
+			}
 			switch (letter)
 			{
 				case '#':
@@ -60,6 +64,7 @@ namespace ion
 					break;
 				case '\n':
 				case '\r':
+				case '\0':
 					if (value_read)
 					{
 						//end of a value

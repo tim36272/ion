@@ -148,6 +148,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\ionlib\app_util.h" />
+    <ClInclude Include="..\..\inc\ionlib\byteswap.h" />
     <ClInclude Include="..\..\inc\ionlib\config.h" />
     <ClInclude Include="..\..\inc\ionlib\data_pump.h" />
     <ClInclude Include="..\..\inc\ionlib\error.h" />

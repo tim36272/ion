@@ -78,7 +78,12 @@ namespace ion
 		//Note that row_*cols_*pages_ may or may not be == allocated_cells due to reallocation or an ROI starting at the origin
 		//Note that *data here will never fail (even if data == NULL) becaue sizeof(*data_) is actually going to be looked up at compile time
 		//The MAT_INDEX is added in case roi_row_origin_ != 0
-		stream.write((const char*)data_ + MAT_INDEX(*this, 0, 0, 0), rows_ * cols_ * pages_ * sizeof(*data_));
+		//write dimenstions
+		stream.write((const char*)&rows_, sizeof(uint32_t));
+		stream.write((const char*)&cols_, sizeof(uint32_t));
+		stream.write((const char*)&pages_, sizeof(uint32_t));
+		size_t bytes_to_write = rows_ * cols_ * pages_ * sizeof(*data_);
+		stream.write((const char*)data_ + MAT_INDEX(*this, 0, 0, 0), bytes_to_write);
 	}
 	template <class T>
 	std::string ion::Matrix<T>::Sprintf()

@@ -124,12 +124,53 @@ namespace ion
 	ion::Matrix<T> ion::Matrix<T>::operator+(const ion::Matrix<T>& rhs)
 	{
 		//This function is ROI-safe
+		//This function supports broadcast
 		//matrices must be the same shape
-		LOGASSERT(rhs.rows_ == rows_);
-		LOGASSERT(rhs.cols_ == cols_);
-		LOGASSERT(rhs.pages_ == pages_);
-		ion::Matrix<T> result(rhs.rows_, rhs.cols_, rhs.pages_);
-		Foreach(&Add, rhs, &result);
+		LOGASSERT(rhs.rows_ == rows_ || rhs.rows_ == 1 || rows_ == 1);
+		LOGASSERT(rhs.cols_ == cols_ || rhs.cols_ == 1 || cols_ == 1);
+		LOGASSERT(rhs.pages_ == pages_ || rhs.pages_ == 1 || pages_ == 1);
+		uint32_t result_rows  = ion::Max(rhs.rows_, rows_);
+		uint32_t result_cols  = ion::Max(rhs.cols_, cols_);
+		uint32_t result_pages = ion::Max(rhs.pages_, pages_);
+
+		ion::Matrix<T> result(result_rows, result_cols, result_pages);
+		//check if this is a trivial addition or broadcast
+		if (rhs.rows_ == rows_ && rhs.cols_ == cols_ && rhs.pages_ == pages_)
+		{
+			Foreach(&Add, rhs, &result);
+		} else
+		{
+			uint32_t left_row_step = rows_ == 1 ? 0 : 1;
+			uint32_t right_row_step = rhs.rows_ == 1 ? 0 : 1;
+			uint32_t left_col_step = cols_ == 1 ? 0 : 1;
+			uint32_t right_col_step = rhs.cols_ == 1 ? 0 : 1;
+			uint32_t left_page_step = pages_ == 1 ? 0 : 1;
+			uint32_t right_page_step = rhs.pages_ == 1 ? 0 : 1;
+
+			uint32_t left_row_index = 0;
+			uint32_t right_row_index = 0;
+			for (uint32_t row_index = 0; row_index < result_rows; ++row_index)
+			{
+				uint32_t left_col_index = 0;
+				uint32_t right_col_index = 0;
+				for (uint32_t col_index = 0; col_index < result_cols; ++col_index)
+				{
+					uint32_t left_page_index = 0;
+					uint32_t right_page_index = 0;
+					for (uint32_t page_index = 0; page_index < result_pages; ++page_index)
+					{
+						result.At(row_index, col_index, page_index) = this->At(left_row_index, left_col_index, left_page_index) + rhs.At(right_row_index, right_col_index, right_page_index);
+						left_page_index += left_page_step;
+						right_page_index += right_page_step;
+					}
+					left_col_index += left_col_step;
+					right_col_index += right_col_step;
+				}
+				left_row_index += left_row_step;
+				right_row_index += right_row_step;
+			}
+		}
+
 		return result;
 	}
 	template <class T>
