@@ -60,7 +60,7 @@ namespace ion
 		pages_ = pages;
 	}
 	template <class T>
-	ion::Matrix<T> ion::Matrix<T>::DeepCopy()
+	ion::Matrix<T> ion::Matrix<T>::DeepCopy() const
 	{
 		ion::Matrix<T> rhs(rows_, cols_, pages_);
 		//this function is ROI-safe
@@ -70,7 +70,7 @@ namespace ion
 			//Note it is NOT necessary that rows_*cols_*pages_ == allocated_cells_
 			//The MAT_INDEX is added in case roi_row_origin_ != 0
 			memcpy(rhs.data_ + MAT_INDEX(rhs, 0, 0, 0), data_ + MAT_INDEX(*this, 0, 0, 0), rows_*cols_*pages_);
-			return;
+			return rhs;
 		} else
 		{
 			//do it the hard way. We still might be able to optimize part of it, though
@@ -98,7 +98,7 @@ namespace ion
 					{
 						for (uint32_t page_index = 0; page_index < pages_; ++page_index)
 						{
-							rhs.data_[MAT_INDEX(rhs, row_index, col_index, page_index)] = data_[MAT_INDEX(*this, row_index, col_index, page_index)];
+							rhs.At(row_index, col_index, page_index) = At(row_index, col_index, page_index);
 						}
 					}
 				}
@@ -107,7 +107,7 @@ namespace ion
 		return rhs;
 	}
 	template <class T>
-	void ion::Matrix<T>::DeepCopyTo(Matrix& rhs)
+	void ion::Matrix<T>::DeepCopyTo(Matrix& rhs) const
 	{
 		LOGASSERT(rows_ == rhs.rows_);
 		LOGASSERT(cols_ == rhs.cols_);
@@ -147,7 +147,7 @@ namespace ion
 					{
 						for (uint32_t page_index = 0; page_index < pages_; ++page_index)
 						{
-							rhs.data_[MAT_INDEX(rhs, row_index, col_index, page_index)] = data_[MAT_INDEX(*this, row_index, col_index, page_index)];
+							rhs.At(row_index, col_index, page_index) = At(row_index, col_index, page_index);
 						}
 					}
 				}
@@ -181,7 +181,7 @@ namespace ion
 			{
 				for (uint32_t page_index = 0; page_index < pages; ++page_index)
 				{
-					data_[MAT_INDEX(*this, row_index, col_index, page_index)] = (T)rhs->data_[MAT_INDEX(rhs, row_index, col_index, page_index)];
+					At(row_index, col_index, page_index) = (T)rhs->At(row_index, col_index, page_index);
 				}
 			}
 		}
@@ -214,7 +214,7 @@ namespace ion
 					uint32_t src_row = (uint32_t)(src_offset % old_mat.rows_);
 					uint32_t src_col = (uint32_t)((src_offset / old_mat.rows_) % old_mat.cols_);
 					uint32_t src_page = (uint32_t)((src_offset / (old_mat.rows_*old_mat.cols_)) % old_mat.pages_);
-					data_[MAT_INDEX(*this, row_index, col_index, page_index)] = old_mat.data_[MAT_INDEX(old_mat, src_row, src_col, src_page)];
+					At(row_index, col_index, page_index) = old_mat.At(src_row, src_col, src_page);
 				}
 			}
 		}
@@ -230,7 +230,7 @@ namespace ion
 			{
 				for (uint32_t page_index = 0; page_index < pages_; ++page_index)
 				{
-					data_[MAT_INDEX(*this, row_index, col_index, page_index)] = val;
+					At(row_index, col_index, page_index) = val;
 				}
 			}
 		}
@@ -266,7 +266,7 @@ namespace ion
 				{
 					for (uint32_t page_index = 0; page_index < pages_; ++page_index)
 					{
-						data_[MAT_INDEX(*this, row_index, col_index, page_index)] = static_cast<T>(0);
+						At(row_index, col_index, page_index) = static_cast<T>(0);
 					}
 				}
 			}
@@ -281,7 +281,7 @@ namespace ion
 		Zero();
 		for (uint32_t row_index = 0; row_index < rows_; ++row_index)
 		{
-			data_[MAT_INDEX(*this, row_index, row_index, 1)] = static_cast <T>(1);
+			At(row_index, row_index, 1) = static_cast <T>(1);
 		}
 	}
 	template <class T>
@@ -300,7 +300,7 @@ namespace ion
 		}
 	}
 	template <class T>
-	ion::Matrix<T> ion::Matrix<T>::Roi(uint32_t row_start, int64_t num_rows, uint32_t col_start, int64_t num_cols, uint32_t page_start, int64_t num_pages)
+	ion::Matrix<T> ion::Matrix<T>::Roi(uint32_t row_start, int64_t num_rows, uint32_t col_start, int64_t num_cols, uint32_t page_start, int64_t num_pages) const
 	{
 		//this function is ROI-safe
 		//If you give this function 0 for num_* it will interpret that as "the rest of them"
@@ -357,17 +357,17 @@ namespace ion
 		return result;
 	}
 	template <class T>
-	uint32_t ion::Matrix<T>::rows()
+	uint32_t ion::Matrix<T>::rows() const
 	{
 		return rows_;
 	}
 	template <class T>
-	uint32_t ion::Matrix<T>::cols()
+	uint32_t ion::Matrix<T>::cols() const
 	{
 		return cols_;
 	}
 	template <class T>
-	uint32_t ion::Matrix<T>::pages()
+	uint32_t ion::Matrix<T>::pages() const
 	{
 		return pages_;
 	}
@@ -375,20 +375,20 @@ namespace ion
 	void ion::Matrix<T>::Set(T val, uint32_t x, uint32_t y = 0, uint32_t z = 0)
 	{
 		//this function is ROI-safe
-		data_[MAT_INDEX(*this, x, y, z)] = val;
+		At(x, y, z) = val;
 	}
 	template <class T>
 	void ion::Matrix<T>::Rowcat(const Matrix<T>& rhs)
 	{
 		//this function shall only be called on an ROI and space shall be available to do the concat
 		LOGASSERT(is_roi_);
-		LOGASSERT(allocated_rows_ > roi_row_offset_ + rows_ + rhs.rows_);
 		//verify there is enough space
-		for (uint32_t row = 0; row < rhs.rows_)
+		LOGASSERT(allocated_rows_ > roi_row_origin_ + rows_ + rhs.rows_);
+		for (uint32_t row = 0; row < rhs.rows_; ++row)
 		{
-			for (uint32_t col = 0; col < rhs.cols_)
+			for (uint32_t col = 0; col < rhs.cols_; ++col)
 			{
-				for (uint32_t page = 0; page < rhs.pages_)
+				for (uint32_t page = 0; page < rhs.pages_; ++page)
 				{
 					this->At(rows_ + row, col, page) = rhs.At(row, col, page);
 				}
@@ -401,13 +401,13 @@ namespace ion
 	{
 		//this function shall only be called on an ROI and space shall be available to do the concat
 		LOGASSERT(is_roi_);
-		LOGASSERT(allocated_cols_ > roi_col_offset_ + cols_ + rhs.cols_);
 		//verify there is enough space
-		for (uint32_t row = 0; row < rhs.rows_)
+		LOGASSERT(allocated_cols_ > roi_col_origin_ + cols_ + rhs.cols_);
+		for (uint32_t row = 0; row < rhs.rows_; ++row)
 		{
-			for (uint32_t col = 0; col < rhs.cols_)
+			for (uint32_t col = 0; col < rhs.cols_; ++col)
 			{
-				for (uint32_t page = 0; page < rhs.pages_)
+				for (uint32_t page = 0; page < rhs.pages_; ++page)
 				{
 					this->At(row, cols_ + col, page) = rhs.At(row, col, page);
 				}
@@ -420,13 +420,13 @@ namespace ion
 	{
 		//this function shall only be called on an ROI and space shall be available to do the concat
 		LOGASSERT(is_roi_);
-		LOGASSERT(allocated_pages_ > roi_page_offset_ + pages_ + rhs.pages_);
 		//verify there is enough space
-		for (uint32_t row = 0; row < rhs.rows_)
+		LOGASSERT(allocated_pages_ > roi_page_origin_ + pages_ + rhs.pages_);
+		for (uint32_t row = 0; row < rhs.rows_; ++row)
 		{
-			for (uint32_t col = 0; col < rhs.cols_)
+			for (uint32_t col = 0; col < rhs.cols_; ++col)
 			{
-				for (uint32_t page = 0; page < rhs.pages_)
+				for (uint32_t page = 0; page < rhs.pages_; ++page)
 				{
 					this->At(row, col, pages_ + page) = rhs.At(row, col, page);
 				}

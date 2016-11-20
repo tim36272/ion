@@ -19,7 +19,7 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 namespace ion
 {
 	template <class T>
-	void ion::Matrix<T>::PrintAscii(std::ostream& stream)
+	void ion::Matrix<T>::PrintAscii(std::ostream& stream) const
 	{
 		//this function is ROI-safe
 		stream << "(" << rows_ << "," << cols_ << "," << pages_ << ")" << std::endl;
@@ -44,7 +44,7 @@ namespace ion
 					{
 						stream << ",";
 					}
-					stream << data_[MAT_INDEX(*this, row_index, col_index, page_index)];
+					stream << At(row_index, col_index, page_index);
 					printed_character_in_this_block = true;
 				}
 				if (cols_ > 1)
@@ -72,7 +72,7 @@ namespace ion
 		stream << "]" << std::endl;
 	}
 	template <class T>
-	void ion::Matrix<T>::DumpBinary(std::ostream& stream)
+	void ion::Matrix<T>::DumpBinary(std::ostream& stream) const
 	{
 		LOGASSERT(continuous_);
 		//Note that row_*cols_*pages_ may or may not be == allocated_cells due to reallocation or an ROI starting at the origin
@@ -86,7 +86,7 @@ namespace ion
 		stream.write((const char*)data_ + MAT_INDEX(*this, 0, 0, 0), bytes_to_write);
 	}
 	template <class T>
-	std::string ion::Matrix<T>::Sprintf()
+	std::string ion::Matrix<T>::Sprintf() const
 	{
 		std::stringstream buf;
 		PrintAscii(buf);
@@ -110,7 +110,7 @@ namespace ion
 		format_ = format;
 	}
 	template <class T>
-	typename ion::Matrix<T>::PrintFmt ion::Matrix<T>::GetPrintFmt()
+	typename ion::Matrix<T>::PrintFmt ion::Matrix<T>::GetPrintFmt() const
 	{
 		return format_;
 	}

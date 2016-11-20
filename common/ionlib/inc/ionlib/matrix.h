@@ -50,8 +50,8 @@ namespace ion
 		//basic
 		Matrix(uint32_t rows, uint32_t cols = 1, uint32_t pages = 1);
 		void Resize(uint32_t rows, uint32_t cols = 1, uint32_t pages = 1);
-		void DeepCopyTo(Matrix& rhs);
-		Matrix DeepCopy();
+		void DeepCopyTo(Matrix& rhs) const;
+		Matrix DeepCopy() const;
 		void Swap(Matrix& rhs);
 		template <class OtherType>
 		void Cast(Matrix<OtherType> rhs);
@@ -63,46 +63,51 @@ namespace ion
 		void Zero();
 		void Eye();
 		void Rand(double min, double max);
-		Matrix Roi(uint32_t row_start, int64_t num_rows, uint32_t col_start=0, int64_t num_cols=0, uint32_t page_start=0, int64_t num_pages=0);
-		uint32_t rows();
-		uint32_t cols();
-		uint32_t pages();
+		Matrix Roi(uint32_t row_start, int64_t num_rows, uint32_t col_start = 0, int64_t num_cols = 0, uint32_t page_start = 0, int64_t num_pages = 0) const;
+		uint32_t rows() const;
+		uint32_t cols() const;
+		uint32_t pages() const;
 		void Rowcat(const Matrix& rhs);
 		void Colcat(const Matrix& rhs);
 		void Pagecat(const Matrix& rhs);
 		//serialization
-		void PrintAscii(std::ostream& stream);
-		void DumpBinary(std::ostream& stream);
-		std::string Sprintf();
+		void PrintAscii(std::ostream& stream) const;
+		void DumpBinary(std::ostream& stream) const;
+		std::string Sprintf() const;
 		enum PrintFmt
 		{
 			FMT_BIN,
 			FMT_ASCII
 		} ;
 		void SetPrintFmt(PrintFmt format);
-		PrintFmt GetPrintFmt();
+		PrintFmt GetPrintFmt() const;
 		//arithmetic
 		void ElementwiseMultiply(const Matrix<T>& multiplier, Matrix<T>* result);
-		T Sum();
+		T Sum() const;
 		typedef T(*foreach_t)(T);
 		typedef T(*foreachPair_t)(T, T);
 		//call function foreach on each element and store the result in result
-		void Foreach(foreach_t foreach, Matrix<T>* result);
+		void Foreach(foreach_t foreach, Matrix<T>* result) const;
 		//call function foreach on corresponding pairs of *this and rhs and store the result in result
-		void Foreach(foreachPair_t foreach, const Matrix<T>& rhs, Matrix<T>* result);
+		void Foreach(foreachPair_t foreach, const Matrix<T>& rhs, Matrix<T>* result) const;
 		//call function foreach on each element along with constant and store the result in result
-		void Foreach(foreachPair_t foreach, T constant, Matrix<T>* result);
+		void Foreach(foreachPair_t foreach, T constant, Matrix<T>* result) const;
 		//vall function foreach on each element along with constant (notice constant can be modified)
-		void Foreach(foreachPair_t foreach, T* constant);
-		Matrix operator+(const Matrix& rhs);
-		Matrix operator-(const Matrix& rhs);
-		Matrix operator*(const Matrix& rhs);
-		Matrix operator*(T rhs);
-		T Dot(const Matrix<T>& rhs);
+		void Foreach(foreachPair_t foreach, T* constant) const;
+		template <class U>
+		friend Matrix<U> operator+(const Matrix<U>& lhs, const Matrix<U>& rhs);
+		template <class U>
+		friend Matrix<U> operator-(const Matrix<U>& lhs, const Matrix<U>& rhs);
+		template <class U>
+		friend Matrix<U> operator*(const Matrix<U>& lhs, const Matrix<U>& rhs);
+		template <class U>
+		friend Matrix<U> operator*(const Matrix<U>& lhs, U rhs);
+		T Dot(const Matrix<T>& rhs) const;
+		Matrix DotAsColumns(const Matrix<T>& rhs) const;
 		void Transpose(Matrix<T>* result);
 		void Inverse(Matrix<T>* result);
-		T Determinent();
-		T Max();
+		T Determinent() const;
+		T Max() const;
 		//filtering
 		enum class ConvFlag
 		{
