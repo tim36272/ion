@@ -114,7 +114,17 @@ namespace ion
 	{
 		return format_;
 	}
+	template <class T>
+	void ion::Matrix<T>::Fread(FILE* fin, size_t num_elements)
+	{
+		//this isn't strictly required but is easier so I'll enforce continuous until I need otherwise
+		LOGASSERT(continuous_);
+		fread_s(data_ + MAT_INDEX(*this, 0, 0, 0), NumCells() * sizeof(T), sizeof(T), num_elements, fin);
+	}
 
 	//explicit instantiations
+	//double
 	template std::ostream& operator<< (std::ostream& out, ion::Matrix<double>& mat);
+	//uchar
+	template std::ostream& operator<< (std::ostream& out, ion::Matrix<uint8_t>& mat);
 } //namespace ion

@@ -69,7 +69,7 @@ namespace ion
 		{
 			//Note it is NOT necessary that rows_*cols_*pages_ == allocated_cells_
 			//The MAT_INDEX is added in case roi_row_origin_ != 0
-			memcpy(rhs.data_ + MAT_INDEX(rhs, 0, 0, 0), data_ + MAT_INDEX(*this, 0, 0, 0), rows_*cols_*pages_);
+			memcpy(rhs.data_ + MAT_INDEX(rhs, 0, 0, 0), data_ + MAT_INDEX(*this, 0, 0, 0), rows_*cols_*pages_ * sizeof(T));
 			return rhs;
 		} else
 		{
@@ -86,7 +86,7 @@ namespace ion
 						//compute where this column starts at
 						size_t col_start = MAT_INDEX(*this, row_index, col_index, 0);
 						size_t rhs_col_start = MAT_INDEX(rhs, row_index, col_index, 0);
-						memcpy(rhs.data_ + rhs_col_start, data_ + col_start, pages_ * sizeof(*data_));
+						memcpy(rhs.data_ + rhs_col_start, data_ + col_start, pages_ * sizeof(T));
 					}
 				}
 			} else
@@ -118,7 +118,7 @@ namespace ion
 		{
 			//Note it is NOT necessary that rows_*cols_*pages_ == allocated_cells_
 			//The MAT_INDEX is added in case roi_row_origin_ != 0
-			memcpy(rhs.data_ + MAT_INDEX(rhs, 0, 0, 0), data_ + MAT_INDEX(*this, 0, 0, 0), rows_*cols_*pages_);
+			memcpy(rhs.data_ + MAT_INDEX(rhs, 0, 0, 0), data_ + MAT_INDEX(*this, 0, 0, 0), rows_*cols_*pages_ * sizeof(T));
 			return;
 		} else
 		{
@@ -135,7 +135,7 @@ namespace ion
 						//compute where this column starts at
 						size_t col_start = MAT_INDEX(*this, row_index, col_index, 0);
 						size_t rhs_col_start = MAT_INDEX(rhs, row_index, col_index, 0);
-						memcpy(rhs.data_ + rhs_col_start, data_ + col_start, pages_ * sizeof(*data_));
+						memcpy(rhs.data_ + rhs_col_start, data_ + col_start, pages_ * sizeof(T));
 					}
 				}
 			} else
@@ -168,20 +168,21 @@ namespace ion
 	}
 	template <class T>
 	template <class OtherType>
-	void ion::Matrix<T>::Cast(Matrix<OtherType> rhs)
+	void ion::Matrix<T>::Cast(const Matrix<OtherType>& rhs)
 	{
 		//this function is ROI-safe
-		LOGASSERT(rhs->rows_ == rows_);
-		LOGASSERT(rhs->cols_ == cols_);
-		LOGASSERT(rhs->pages_ == pages_);
+		//Notice that since rhs is not the same type as *this I don't have access to rhs's private data
+		LOGASSERT(rhs.rows() == rows_);
+		LOGASSERT(rhs.cols() == cols_);
+		LOGASSERT(rhs.pages() == pages_);
 
-		for (uint32_t row_index = 0; row_index < rows; ++row_index)
+		for (uint32_t row_index = 0; row_index < rows_; ++row_index)
 		{
-			for (uint32_t col_index = 0; col_index < cols; ++col_index)
+			for (uint32_t col_index = 0; col_index < cols_; ++col_index)
 			{
-				for (uint32_t page_index = 0; page_index < pages; ++page_index)
+				for (uint32_t page_index = 0; page_index < pages_; ++page_index)
 				{
-					At(row_index, col_index, page_index) = (T)rhs->At(row_index, col_index, page_index);
+					At(row_index, col_index, page_index) = (T)rhs.At(row_index, col_index, page_index);
 				}
 			}
 		}
@@ -285,6 +286,46 @@ namespace ion
 		}
 	}
 	template <class T>
+	ion::Matrix<T> ion::Matrix<T>::Diagonal()
+	{
+		//cases:
+		//	(1,1,1) Legal	(1,1)(2,1)(3,1)
+		//	(1,2,1) Illegal (2)
+		//	(1,1,2) Illegal (3)
+		//	(1,2,2) Legal	(1,1)(2,3)(3,3)
+		//	(1,2,3) Illegal (2)
+
+		//	(2,1,1) Illegal (1)
+		//	(2,2,1) Legal	(1,2)(2,2)(3,1)
+		//	(2,1,2) Legal	(1,3)(2,1)(3,2)
+		//	(2,2,2) Legal	(1,2)(2,2)(3,2)
+		//	(2,2,3) Illegal (3)
+
+		//	(3,2,1) Illegal (1)
+		//	(3,1,2) Illegal (1)
+		//	(3,2,2) Illegal (1)
+		//	(3,2,3) Illegal (2)
+		LOGASSERT((rows_  == 1) || (rows_  == cols_) || (rows_ == pages_));
+		LOGASSERT((cols_  == 1) || (cols_  == rows_) || (cols_ == pages_));
+		LOGASSERT((pages_ == 1) || (pages_ == rows_) || (pages_ == cols_));
+
+		uint32_t row_step  = rows_ == 1 ? 0 : 1;
+		uint32_t col_step  = cols_ == 1 ? 0 : 1;
+		uint32_t page_step = pages_ == 1 ? 0 : 1;
+		uint32_t row_index = 0, col_index = 0, page_index = 0;
+		uint32_t num_elements = ion::Max(ion::Max(rows_, cols_), pages_);
+
+		ion::Matrix<T> result(num_elements);
+		for (uint32_t element_index = 0; element_index < num_elements; ++element_index)
+		{
+			result.At(element_index) = At(row_index, col_index, page_index);
+			row_index += row_step;
+			col_index += col_step;
+			page_index += page_step;
+		}
+		return result;
+	}
+	template <class T>
 	void ion::Matrix<T>::Rand(double min, double max)
 	{
 		//this function is inplace safe
@@ -329,7 +370,6 @@ namespace ion
 				LOGFATAL("Creating an ROI from an ROI, and the new ROI extends past the original ROI. Original ROI has size (%u,%u,%u). New ROI starts at (%u,%u,%u) and has size (%u,%u,%u)", rows_, cols_, pages_, row_start, col_start, page_start, num_rows, num_cols, num_pages);
 			}
 		}
-
 		Matrix result;
 
 		result.is_roi_ = true;
@@ -355,6 +395,59 @@ namespace ion
 		}
 
 		return result;
+	}
+	template <class T>
+	void ion::Matrix<T>::Roi_Fast(uint32_t row_start, int64_t num_rows, uint32_t col_start, int64_t num_cols, uint32_t page_start, int64_t num_pages, ion::Matrix<T>* reused_roi) const
+	{
+		//this function is ROI-safe
+		//If you give this function 0 for num_* it will interpret that as "the rest of them"
+		//if you give this function negative values for num_* it is interpret that as "the rest of them minus abs(num_*)"
+		if (num_rows <= 0)
+		{
+			num_rows = rows_ - row_start + num_rows;
+		}
+		if (num_cols <= 0)
+		{
+			num_cols = cols_ - col_start + num_cols;
+		}
+		if (num_pages <= 0)
+		{
+			num_pages = pages_ - page_start + num_pages;
+		}
+		LOGASSERT(row_start + num_rows <= allocated_rows_);
+		LOGASSERT(col_start + num_cols <= allocated_cols_);
+		LOGASSERT(page_start + num_pages <= allocated_pages_);
+		//Don't allow creating an ROI which extends outside the original ROI
+		if (is_roi_)
+		{
+			if (row_start < roi_row_origin_ || col_start < roi_col_origin_ || page_start < roi_page_origin_ ||
+				(row_start + num_rows) > rows_ || (col_start + num_cols) > cols_ || (page_start + num_pages > pages_))
+			{
+				LOGFATAL("Creating an ROI from an ROI, and the new ROI extends past the original ROI. Original ROI has size (%u,%u,%u). New ROI starts at (%u,%u,%u) and has size (%u,%u,%u)", rows_, cols_, pages_, row_start, col_start, page_start, num_rows, num_cols, num_pages);
+			}
+		}
+
+		reused_roi->is_roi_ = true;
+		reused_roi->data_ = data_;
+		reused_roi->allocated_cells_ = 0;
+		reused_roi->rows_ = (uint32_t)num_rows;
+		reused_roi->cols_ = (uint32_t)num_cols;
+		reused_roi->pages_ = (uint32_t)num_pages;
+		reused_roi->roi_row_origin_ = row_start + roi_row_origin_;
+		reused_roi->roi_col_origin_ = col_start + roi_col_origin_;
+		reused_roi->roi_page_origin_ = page_start + roi_page_origin_;
+		reused_roi->allocated_rows_ = allocated_rows_;
+		reused_roi->allocated_cols_ = allocated_cols_;
+		reused_roi->allocated_pages_ = allocated_pages_;
+		reused_roi->format_ = format_;
+		//note it is not required that row_start == 0 nor that rows_ == num_rows because the data can still be continuous in the middle of the allocated region
+		if (col_start == 0 && page_start == 0 && allocated_cols_ == num_cols && allocated_pages_ == num_pages)
+		{
+			reused_roi->continuous_ = true;
+		} else
+		{
+			reused_roi->continuous_ = false;
+		}
 	}
 	template <class T>
 	uint32_t ion::Matrix<T>::rows() const
@@ -434,6 +527,44 @@ namespace ion
 		}
 		pages_ += rhs.pages_;
 	}
+	template <class T>
+	uint64_t ion::Matrix<T>::NumDiff(const ion::Matrix<T>& rhs) const
+	{
+		LOGASSERT(rows_ == rhs.rows_ && cols_ == rhs.cols_ && pages_ == rhs.pages_);
+		uint64_t result = 0;
+		for (uint32_t row = 0; row < rhs.rows_; ++row)
+		{
+			for (uint32_t col = 0; col < rhs.cols_; ++col)
+			{
+				for (uint32_t page = 0; page < rhs.pages_; ++page)
+				{
+					if (At(row, col, page) != rhs.At(row, col, page))
+					{
+						result++;
+					}
+				}
+			}
+		}
+		return result;
+	}
+	template <class T>
+	uint64_t ion::Matrix<T>::NumCells() const
+	{
+		return rows_ * cols_ * pages_;
+	}
+	template <class T>
+	ion::Matrix<T> Linspace(T min, T max)
+	{
+		ion::Matrix<T> result((uint32_t)max - min);
+		uint32_t row_idx = 0;
+		for (T idx = min; idx < max; ++idx)
+		{
+			result.At(row_idx) = idx;
+			++row_idx;
+		}
+		return result;
+	}
 	//explicit instantiations
-
+	//double to uchar
+	template void ion::Matrix<double>::Cast(const ion::Matrix<uint8_t>& rhs);
 } //namespace ion

@@ -21,6 +21,7 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <limits>
 #define MAT_INDEX(mat,x,y,z) ( ((x)+(mat).roi_row_origin_) * (mat).allocated_pages_ * (mat).allocated_cols_ +\
 							  ( (y)+(mat).roi_col_origin_) * (mat).allocated_pages_ +\
 								(z)+(mat).roi_page_origin_)
@@ -54,7 +55,7 @@ namespace ion
 		Matrix DeepCopy() const;
 		void Swap(Matrix& rhs);
 		template <class OtherType>
-		void Cast(Matrix<OtherType> rhs);
+		void Cast(const Matrix<OtherType>& rhs);
 		void Reshape(uint32_t new_rows, uint32_t new_cols = 1, uint32_t new_pages = 1);
 		void Set(T val, uint32_t x, uint32_t y = 0, uint32_t z = 0);
 		void SetAll(T val);
@@ -62,14 +63,18 @@ namespace ion
 		const T& At(uint32_t x, uint32_t y = 0, uint32_t z = 0) const;
 		void Zero();
 		void Eye();
+		Matrix Diagonal();
 		void Rand(double min, double max);
 		Matrix Roi(uint32_t row_start, int64_t num_rows, uint32_t col_start = 0, int64_t num_cols = 0, uint32_t page_start = 0, int64_t num_pages = 0) const;
+		void Roi_Fast(uint32_t row_start, int64_t num_rows, uint32_t col_start = 0, int64_t num_cols = 0, uint32_t page_start = 0, int64_t num_pages = 0, Matrix* reused_roi = NULL) const;
 		uint32_t rows() const;
 		uint32_t cols() const;
 		uint32_t pages() const;
 		void Rowcat(const Matrix& rhs);
 		void Colcat(const Matrix& rhs);
 		void Pagecat(const Matrix& rhs);
+		uint64_t NumDiff(const Matrix& rhs) const;
+		uint64_t NumCells() const;
 		//serialization
 		void PrintAscii(std::ostream& stream) const;
 		void DumpBinary(std::ostream& stream) const;
@@ -81,8 +86,10 @@ namespace ion
 		} ;
 		void SetPrintFmt(PrintFmt format);
 		PrintFmt GetPrintFmt() const;
+		void Fread(FILE* fin, size_t num_elements);
 		//arithmetic
 		void ElementwiseMultiply(const Matrix<T>& multiplier, Matrix<T>* result);
+		void ElementwiseMultiplyRotated(const Matrix<T>& multiplier, Matrix<T>* result); //conceptually rotates the matrix 180 degrees before applying
 		T Sum() const;
 		typedef T(*foreach_t)(T);
 		typedef T(*foreachPair_t)(T, T);
@@ -97,17 +104,25 @@ namespace ion
 		template <class U>
 		friend Matrix<U> operator+(const Matrix<U>& lhs, const Matrix<U>& rhs);
 		template <class U>
+		friend Matrix<U> operator+(const Matrix<U>& lhs, U rhs);
+		template <class U>
 		friend Matrix<U> operator-(const Matrix<U>& lhs, const Matrix<U>& rhs);
 		template <class U>
 		friend Matrix<U> operator*(const Matrix<U>& lhs, const Matrix<U>& rhs);
 		template <class U>
 		friend Matrix<U> operator*(const Matrix<U>& lhs, U rhs);
+		template <class U>
+		friend Matrix<U> operator/(const Matrix<U>& lhs, U rhs);
 		T Dot(const Matrix<T>& rhs) const;
 		Matrix DotAsColumns(const Matrix<T>& rhs) const;
 		void Transpose(Matrix<T>* result);
 		void Inverse(Matrix<T>* result);
 		T Determinent() const;
 		T Max() const;
+		T Mean() const;
+		Matrix Log() const;
+		uint64_t Argmax() const; //computes argmax by flattening the array first
+		ion::Matrix<uint32_t> Argmax(uint32_t dim) const;
 		//filtering
 		enum class ConvFlag
 		{
@@ -115,7 +130,8 @@ namespace ion
 			CONV_FLAG_MIRROR = 2,
 			CONV_FLAG_COPY = 4,
 			CONV_FLAG_WRAPAROND = 8,
-			CONV_FLAG_SPARSE_Z = 16
+			CONV_FLAG_NO_PAD = 16,
+			CONV_FLAG_SPARSE_Z = 32
 		};
 		template <class U>
 		friend ion::Matrix<U> Convolve(ion::Matrix<U> mat, ion::Matrix<U> kernel, typename ion::Matrix<U>::ConvFlag flags);
@@ -123,6 +139,9 @@ namespace ion
 		friend bool indexInPad(Matrix<U> mat_padded, Matrix<U> kernel, uint32_t row, uint32_t col, uint32_t page);
 		template <class U>
 		friend ion::Matrix<U> MaxPool(ion::Matrix<U> mat, uint32_t pool_size);
+		template <class U>
+		friend ion::Matrix<U> Softmax(ion::Matrix<U> mat);
+
 	private:
 		Matrix() { } //default construction is only allowed by the library so this is private
 		//size of the non-roi matrix. It is guaranteed that (data_ + rows_*cols_*pages_) is the last element if !is_roi_
@@ -146,6 +165,8 @@ namespace ion
 	};
 	template <class T>
 	std::ostream& operator<< (std::ostream& out, ion::Matrix<T>& mat);
+	template <class T>
+	ion::Matrix<T> Linspace(T min, T max);
 }; //namespace ion
 
 #endif //ION_MATRIX_H_

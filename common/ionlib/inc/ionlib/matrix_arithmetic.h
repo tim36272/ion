@@ -28,7 +28,8 @@ namespace ion
 			{
 				for (uint32_t page = 0; page < this->pages_; ++page)
 				{
-					sum += At(row, col, page);
+					//this does not use ion::Matrix::At for performance reasons
+					sum += data_[MAT_INDEX(*this,row, col, page)];
 				}
 			}
 		}
@@ -46,7 +47,7 @@ namespace ion
 			{
 				for (uint32_t page = 0; page < pages_; ++page)
 				{
-					result->At(row, col, page) = foreach(At(row, col, page));
+					result->data_[MAT_INDEX(*result,row, col, page)] = foreach(data_[MAT_INDEX(*this,row, col, page)]);
 				}
 			}
 		}
@@ -63,7 +64,7 @@ namespace ion
 			{
 				for (uint32_t page = 0; page < pages_; ++page)
 				{
-					result->At(row, col, page) = foreach(At(row, col, page), rhs.At(row, col, page));
+					result->data_[MAT_INDEX(*result, row, col, page)] = foreach(data_[MAT_INDEX(*this, row, col, page)], rhs.data_[MAT_INDEX(rhs, row, col, page)]);
 				}
 			}
 		}
@@ -80,7 +81,7 @@ namespace ion
 			{
 				for (uint32_t page = 0; page < pages_; ++page)
 				{
-					result->At(row, col, page) = foreach(At(row, col, page), constant);
+					result->data_[MAT_INDEX(*result, row, col, page)] = foreach(data_[MAT_INDEX(*this, row, col, page)], constant);
 				}
 			}
 		}
@@ -95,16 +96,12 @@ namespace ion
 			{
 				for (uint32_t page = 0; page < pages_; ++page)
 				{
-					*usrdata = foreach(At(row, col, page), *usrdata);
+					*usrdata = foreach(data_[MAT_INDEX(*this, row, col, page)], *usrdata);
 				}
 			}
 		}
 	}
-	template <class T>
-	inline T Multiply(T left, T right)
-	{
-		return left * right;
-	}
+
 	template <class T>
 	void ion::Matrix<T>::ElementwiseMultiply(const Matrix<T>& multiplier, Matrix<T>* result)
 	{
@@ -113,13 +110,49 @@ namespace ion
 		LOGASSERT(rows_ == multiplier.rows_ && multiplier.rows_ == result->rows_);
 		LOGASSERT(cols_ == multiplier.cols_ && multiplier.cols_ == result->cols_);
 		LOGASSERT(pages_ == multiplier.pages_ && multiplier.pages_ == result->pages_);
-		Foreach(&Multiply, multiplier, result);
+		size_t this_idx, multiplier_idx, result_idx;
+		//This does not use Foreach for performance reasons
+		for (uint32_t row = 0; row < rows_; ++row)
+		{
+			for (uint32_t col = 0; col < cols_; ++col)
+			{
+				for (uint32_t page = 0; page < pages_; ++page)
+				{
+					this_idx = MAT_INDEX(*this, row, col, page);
+					multiplier_idx = MAT_INDEX(multiplier, row, col, page);
+					result_idx = MAT_INDEX(*result, row, col, page);
+					//this does not use ion::Matrix::At for performance reasons
+					result->data_[result_idx] = data_[this_idx] * multiplier.data_[multiplier_idx];
+				}
+			}
+		}
 	}
 	template <class T>
-	inline T Add(T left, T right)
+	void ion::Matrix<T>::ElementwiseMultiplyRotated(const Matrix<T>& multiplier, Matrix<T>* result)
 	{
-		return left + right;
+		//matrices must be the same shape
+		//This function is ROI-safe
+		LOGASSERT(rows_ == multiplier.rows_ && multiplier.rows_ == result->rows_);
+		LOGASSERT(cols_ == multiplier.cols_ && multiplier.cols_ == result->cols_);
+		LOGASSERT(pages_ == multiplier.pages_ && multiplier.pages_ == result->pages_);
+		size_t this_idx, multiplier_idx, result_idx;
+		//This does not use Foreach for performance reasons
+		for (uint32_t row = 0; row < rows_; ++row)
+		{
+			for (uint32_t col = 0; col < cols_; ++col)
+			{
+				for (uint32_t page = 0; page < pages_; ++page)
+				{
+					this_idx = MAT_INDEX(*this, row, col, page);
+					multiplier_idx = MAT_INDEX(multiplier, rows_-row-1, cols_-col-1, pages_-page-1);
+					result_idx = MAT_INDEX(*result, row, col, page);
+					//this does not use ion::Matrix::At for performance reasons
+					result->data_[result_idx] = data_[this_idx] * multiplier.data_[multiplier_idx];
+				}
+			}
+		}
 	}
+
 	template <class T>
 	ion::Matrix<T> operator+(const ion::Matrix<T>& lhs, const ion::Matrix<T>& rhs)
 	{
@@ -137,7 +170,7 @@ namespace ion
 		//check if this is a trivial addition or broadcast
 		if (rhs.rows_ == lhs.rows_ && rhs.cols_ == lhs.cols_ && rhs.pages_ == lhs.pages_)
 		{
-			lhs.Foreach(&Add, rhs, &result);
+			lhs.Foreach(&ion::Add, rhs, &result);
 		} else
 		{
 			uint32_t left_row_step = lhs.rows_ == 1 ? 0 : 1;
@@ -174,9 +207,11 @@ namespace ion
 		return result;
 	}
 	template <class T>
-	inline T Subtract(T left, T right)
+	ion::Matrix<T> operator+(const ion::Matrix<T>& lhs, T rhs)
 	{
-		return left - right;
+		ion::Matrix<T> result(lhs.rows_, lhs.cols_, lhs.pages_);
+		lhs.Foreach(&ion::Add, rhs, &result);
+		return result;
 	}
 	template <class T>
 	ion::Matrix<T> operator-(const ion::Matrix<T>& lhs, const ion::Matrix<T>& rhs)
@@ -187,7 +222,7 @@ namespace ion
 		LOGASSERT(rhs.cols_  == lhs.cols_);
 		LOGASSERT(rhs.pages_ == lhs.pages_);
 		ion::Matrix<T> result(rhs.rows_, rhs.cols_, rhs.pages_);
-		lhs.Foreach(&Subtract, rhs, &result);
+		lhs.Foreach(&ion::Subtract, rhs, &result);
 		return result;
 	}
 	template <class T>
@@ -201,7 +236,14 @@ namespace ion
 	ion::Matrix<T> operator*(const ion::Matrix<T>& lhs, T rhs)
 	{
 		ion::Matrix<T> result(lhs.rows_, lhs.cols_, lhs.pages_);
-		lhs.Foreach(&Multiply, rhs, &result);
+		lhs.Foreach(&ion::Multiply, rhs, &result);
+		return result;
+	}
+	template <class T>
+	ion::Matrix<T> operator/(const ion::Matrix<T>& lhs, T rhs)
+	{
+		ion::Matrix<T> result(lhs.rows_, lhs.cols_, lhs.pages_);
+		lhs.Foreach(&ion::Divide, rhs, &result);
 		return result;
 	}
 	template <class T>
@@ -309,9 +351,78 @@ namespace ion
 		Foreach(&ion::Max, &result);
 		return result;
 	}
+	template <class T>
+	T ion::Matrix<T>::Mean() const
+	{
+		return Sum() / static_cast<T>(rows_ * cols_ * pages_);
+	}
+	template <class T>
+	ion::Matrix<T> ion::Matrix<T>::Log() const
+	{
+		ion::Matrix<T> result(rows_, cols_, pages_);
+		Foreach(&ion::Log, &result);
+		return result;
+	}
+	//computes argmax by flattening the array first
+	template <class T>
+	uint64_t ion::Matrix<T>::Argmax() const
+	{
+		T max = std::numeric_limits<T>::lowest();
+		uint32_t max_row=0, max_col=0, max_page=0; //assigned 0 in case the entire matrix is full of std::numeric_limits<T>::lowest()
+		for (uint32_t row = 0; row < rows_; ++row)
+		{
+			for (uint32_t col = 0; col < cols_; ++col)
+			{
+				for (uint32_t page = 0; page < pages_; ++page)
+				{
+					if (At(row, col, page) > max)
+					{
+						max = At(row, col, page);
+						max_row = row;
+						max_col = col;
+						max_page = page;
+					}
+				}
+			}
+		}
+		return max_row * pages_ * cols_ + max_col * pages_ + max_page;
+	}
+	template <class T>
+	ion::Matrix<uint32_t> ion::Matrix<T>::Argmax(uint32_t dim) const
+	{
+		//I don't know what this means for a 3D matrix so disallow it:
+		LOGASSERT(pages_ == 1);
+
+		ion::Matrix<uint32_t> result(rows_);
+		for (uint32_t row = 0; row < rows_; ++row)
+		{
+			uint32_t max_pos;
+			T max = std::numeric_limits<T>::lowest();
+			for (uint32_t col = 0; col < cols_; ++col)
+			{
+				if (At(row, col) > max)
+				{
+					max = At(row, col);
+					max_pos = col;
+				}
+			}
+			result.At(row) = max_pos;
+		}
+		return result;
+	}
 	//explicit instantiations
+	//double
 	template Matrix<double> operator+(const Matrix<double>& lhs, const Matrix<double>& rhs);
+	template Matrix<double> operator+(const Matrix<double>& lhs, double rhs);
 	template Matrix<double> operator-(const Matrix<double>& lhs, const Matrix<double>& rhs);
 	template Matrix<double> operator*(const Matrix<double>& lhs, const Matrix<double>& rhs);
 	template Matrix<double> operator*(const Matrix<double>& lhs, double rhs);
+	template Matrix<double> operator/(const Matrix<double>& lhs, double rhs);
+	//uchar
+	template Matrix<uint8_t> operator+(const Matrix<uint8_t>& lhs, const Matrix<uint8_t>& rhs);
+	template Matrix<uint8_t> operator+(const Matrix<uint8_t>& lhs, uint8_t rhs);
+	template Matrix<uint8_t> operator-(const Matrix<uint8_t>& lhs, const Matrix<uint8_t>& rhs);
+	template Matrix<uint8_t> operator*(const Matrix<uint8_t>& lhs, const Matrix<uint8_t>& rhs);
+	template Matrix<uint8_t> operator*(const Matrix<uint8_t>& lhs, uint8_t rhs);
+	template Matrix<uint8_t> operator/(const Matrix<uint8_t>& lhs, uint8_t rhs);
 } //namespace ion

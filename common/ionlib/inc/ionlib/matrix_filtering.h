@@ -48,19 +48,33 @@ namespace ion
 		LOGASSERT(kernel.cols_ % 2 == 1);
 		LOGASSERT(kernel.pages_ % 2 == 1);
 		//create a temporary matrix which is padded appropriately
-		Matrix<T> mat_padded(mat.rows_ + kernel.rows_ - 1, mat.cols_ + kernel.cols_ - 1, mat.pages_ + kernel.pages_ - 1);
+		uint32_t pad_rows, pad_cols, pad_pages;
+		if ((uint32_t)flags & (uint32_t)Matrix<T>::ConvFlag::CONV_FLAG_NO_PAD)
+		{
+			//the output will just be shrunk
+			pad_rows = 0;
+			pad_cols = 0;
+			pad_pages =0;
+		} else
+		{
+			pad_rows = kernel.rows_ - 1;
+			pad_cols = kernel.cols_ - 1;
+			pad_pages = kernel.pages_ - 1;
+		}
+		Matrix<T> mat_padded(mat.rows_ + pad_rows,mat.cols_ + pad_cols,mat.pages_ + pad_pages);
 		if ((uint32_t)flags & (uint32_t)Matrix<T>::ConvFlag::CONV_FLAG_ZERO_PAD)
 		{
 			mat_padded.Zero();
 		}
 		//copy the original mat to the padded one
-		Matrix<T> mat_padded_roi = mat_padded.Roi(kernel.rows_ / 2, -(int64_t)kernel.rows_ / 2,
-												  kernel.cols_ / 2, -(int64_t)kernel.cols_ / 2,
-												  kernel.pages_ / 2, -(int64_t)kernel.pages_ / 2);
+		Matrix<T> mat_padded_roi = mat_padded.Roi(pad_rows/2, -(int64_t)pad_rows / 2,
+												  pad_cols/2, -(int64_t)pad_cols / 2,
+												  pad_pages/ 2, -(int64_t)pad_pages / 2);
 
 		mat.DeepCopyTo(mat_padded_roi);
 		//fill in the edges of mat_padded
-		if (!((uint32_t)flags & (uint32_t)Matrix<T>::ConvFlag::CONV_FLAG_ZERO_PAD))
+		if (!((uint32_t)flags & (uint32_t)Matrix<T>::ConvFlag::CONV_FLAG_ZERO_PAD) && 
+			!((uint32_t)flags & (uint32_t)Matrix<T>::ConvFlag::CONV_FLAG_NO_PAD))
 		{
 			for (uint32_t row = 0; row < ceil(mat_padded.rows_ / 2.0); ++row)
 			{
@@ -109,13 +123,16 @@ namespace ion
 			}
 		}
 		//create output
-		Matrix<T> output(mat.rows_, mat.cols_, mat.pages_);
+		//Here's what the size means: base size is mat, then in each dimensions we either shrink it if there is no pad or don't shrink it if there is a pad
+		Matrix<T> output(mat.rows_ - (kernel.rows_ - (pad_rows + 1)), mat.cols_ - (kernel.cols_ - (pad_cols+1)), mat.pages_ - (kernel.pages_ - (pad_pages+1)));
 		if ((uint32_t)flags & (uint32_t)Matrix<T>::ConvFlag::CONV_FLAG_SPARSE_Z)
 		{
 			//this is only done if Z is sparse because otherwise every cell is guaranteed to be filled
 			output.Zero();
 		}
 		Matrix<T> temp(kernel.rows_, kernel.cols_, kernel.pages_);
+		Matrix<T> src_roi = mat_padded.Roi(0, 0);
+#pragma loop(hint_parallel(8))
 		for (uint32_t row = 0; row < output.rows_; ++row)
 		{
 			for (uint32_t col = 0; col < output.cols_; ++col)
@@ -141,9 +158,10 @@ namespace ion
 				{
 					//now row,col,page is centered around the cell to convolve
 					//make a region of interest around this cell
-					Matrix<T> src_roi = mat_padded.Roi(row, kernel.rows_, col, kernel.cols_, page, kernel.pages_);
-					src_roi.ElementwiseMultiply(kernel, &temp);
-					output.At(row, col, page) = temp.Sum();
+					mat_padded.Roi_Fast(row, kernel.rows_, col, kernel.cols_, page, kernel.pages_, &src_roi);
+					src_roi.ElementwiseMultiplyRotated(kernel, &temp);
+					//this doesn't use At for performance reasons
+					output.data_[MAT_INDEX(output,row, col, page)] = temp.Sum();
 				}
 			}
 		}
@@ -152,25 +170,54 @@ namespace ion
 	template <class T>
 	ion::Matrix<T> MaxPool(ion::Matrix<T> mat, uint32_t pool_size)
 	{
-		uint32_t result_rows  = ion::Max(0, mat.rows_ / pool_size);
-		uint32_t result_cols  = ion::Max(0, mat.cols_ / pool_size);
-		uint32_t result_pages = ion::Max(0, mat.pages_ / pool_size);
+		uint32_t result_rows  = ion::Max(1U, mat.rows_ / pool_size);
+		uint32_t result_cols  = ion::Max(1U, mat.cols_ / pool_size);
+		uint32_t result_pages = ion::Max(1U, mat.pages_ / pool_size);
 		
+		//handle smaller than 3D mats:
+		uint32_t row_step = (mat.rows_ == 1) ? (1) : (pool_size);
+		uint32_t col_step = (mat.cols_ == 1) ? (1) : (pool_size);
+		uint32_t page_step = (mat.pages_ == 1) ? (1) : (pool_size);
 		ion::Matrix<T> result(result_rows, result_cols, result_pages);
-		for (uint32_t row = 0; row < mat.rows_; row += pool_size)
+		for (uint32_t row = 0; row < mat.rows_; row += row_step)
 		{
-			for (uint32_t col = 0; col < mat.cols_; col += pool_size)
+			for (uint32_t col = 0; col < mat.cols_; col += col_step)
 			{
-				for (uint32_t page = 0; page < mat.pages_; page += pool_size)
+				for (uint32_t page = 0; page < mat.pages_; page += page_step)
 				{
 					//create ROI for this macrovoxel
-					ion::Matrix<double> roi = mat.Roi(row, pool_size, col, pool_size, page, pool_size);
+					ion::Matrix<T> roi = mat.Roi(row, row_step, col, col_step, page, page_step);
 					result.At(row / pool_size, col / pool_size, page / pool_size) = roi.Max();
 				}
 			}
 		}
+		return result;
+	}
+	template <class T>
+	ion::Matrix<T> Softmax(ion::Matrix<T> mat)
+	{
+		//I don't know how to define this for a 3D matrix, for now make it 2D
+		LOGASSERT(mat.pages_ == 1);
+		//Theano computes this "rowwise" if the input is not a vector, but I am not yet 100% clear on which direction that is so I'm going to wait until it required
+		LOGASSERT(mat.cols_ == 1);
+
+		//Compute the sum of exp(mat)
+		ion::Matrix<T> result(mat.rows_);
+		mat.Foreach(&ion::Exp, &result);
+		T sum = result.Sum();
+		//Calculate softmax
+		result.Foreach(&ion::Divide, sum, &result);
+		return result;
 	}
 
 	//explicit instantiations
-	template Matrix<double> Convolve(Matrix<double> mat, Matrix<double> kernel, Matrix<double>::ConvFlag flags);
+	//double
+	template ion::Matrix<double> Convolve(ion::Matrix<double> mat, ion::Matrix<double> kernel, ion::Matrix<double>::ConvFlag flags);
+	template ion::Matrix<double> MaxPool(ion::Matrix<double> mat, uint32_t pool_size);
+	template ion::Matrix<double> Softmax(ion::Matrix<double> mat);
+	//uchar
+	template ion::Matrix<uint8_t> Convolve(ion::Matrix<uint8_t> mat, ion::Matrix<uint8_t> kernel, ion::Matrix<uint8_t>::ConvFlag flags);
+	template ion::Matrix<uint8_t> MaxPool(ion::Matrix<uint8_t> mat, uint32_t pool_size);
+	template ion::Matrix<uint8_t> Softmax(ion::Matrix<uint8_t> mat);
+
 } //namespace ion
