@@ -16,6 +16,7 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
 #include "ionlib/matrix.h"
 #include "ionlib/math.h"
+#include "ionlib/thread.h"
 namespace ion
 {
 	template <class T>
@@ -167,6 +168,34 @@ namespace ion
 		}
 		return output;
 	}
+
+	template <class T>
+	ion::Matrix<T> ConvolveDryRun(ion::Matrix<T> mat, ion::Matrix<T> kernel, typename ion::Matrix<T>::ConvFlag flags)
+	{
+		LOGASSERT(kernel.rows_ % 2 == 1);
+		LOGASSERT(kernel.cols_ % 2 == 1);
+		LOGASSERT(kernel.pages_ % 2 == 1);
+		//create a temporary matrix which is padded appropriately
+		uint32_t pad_rows, pad_cols, pad_pages;
+		if ((uint32_t)flags & (uint32_t)Matrix<T>::ConvFlag::CONV_FLAG_NO_PAD)
+		{
+			//the output will just be shrunk
+			pad_rows = 0;
+			pad_cols = 0;
+			pad_pages = 0;
+		} else
+		{
+			pad_rows = kernel.rows_ - 1;
+			pad_cols = kernel.cols_ - 1;
+			pad_pages = kernel.pages_ - 1;
+		}
+		
+		//create output
+		//Here's what the size means: base size is mat, then in each dimensions we either shrink it if there is no pad or don't shrink it if there is a pad
+		Matrix<T> output(mat.rows_ - (kernel.rows_ - (pad_rows + 1)), mat.cols_ - (kernel.cols_ - (pad_cols + 1)), mat.pages_ - (kernel.pages_ - (pad_pages + 1)));
+		
+		return output;
+	}
 	template <class T>
 	ion::Matrix<T> MaxPool(ion::Matrix<T> mat, uint32_t pool_size)
 	{
@@ -209,15 +238,42 @@ namespace ion
 		result.Foreach(&ion::Divide, sum, &result);
 		return result;
 	}
+	
+	template <class T>
+	void ConvolutionThread(void* usrdata)
+	{
+		ConvolveTaskData<T>* task_data = (ConvolveTaskData<T>*)usrdata;
+		ConvolveTask<T> task;
+		while (true)
+		{
+			//get an element from the queue and do the work
+			(void)task_data->task_queue.Pop(0, &task);
+			*(task.result) = ion::Convolve(*(task.input), *(task.kernel), task.flags);
+			task_data->result_queue.Push(task);
+		}
+	}
 
+	template <class T>
+	void InitConvolveThreads(uint32_t num_threads, ConvolveTaskData<T>& task_data)
+	{
+		for (uint32_t thread_index = 0; thread_index < num_threads; ++thread_index)
+		{
+			ion::StartThread(ConvolutionThread<double>, &task_data);
+		}
+	}
 	//explicit instantiations
 	//double
 	template ion::Matrix<double> Convolve(ion::Matrix<double> mat, ion::Matrix<double> kernel, ion::Matrix<double>::ConvFlag flags);
+	template ion::Matrix<double> ConvolveDryRun(ion::Matrix<double> mat, ion::Matrix<double> kernel, ion::Matrix<double>::ConvFlag flags);
 	template ion::Matrix<double> MaxPool(ion::Matrix<double> mat, uint32_t pool_size);
 	template ion::Matrix<double> Softmax(ion::Matrix<double> mat);
+	template void InitConvolveThreads(uint32_t num_threads, ConvolveTaskData<double>& task_data);
 	//uchar
 	template ion::Matrix<uint8_t> Convolve(ion::Matrix<uint8_t> mat, ion::Matrix<uint8_t> kernel, ion::Matrix<uint8_t>::ConvFlag flags);
+	template ion::Matrix<uint8_t> ConvolveDryRun(ion::Matrix<uint8_t> mat, ion::Matrix<uint8_t> kernel, ion::Matrix<uint8_t>::ConvFlag flags);
 	template ion::Matrix<uint8_t> MaxPool(ion::Matrix<uint8_t> mat, uint32_t pool_size);
 	template ion::Matrix<uint8_t> Softmax(ion::Matrix<uint8_t> mat);
+	template void InitConvolveThreads(uint32_t num_threads, ConvolveTaskData<uint8_t>& task_data);
+
 
 } //namespace ion

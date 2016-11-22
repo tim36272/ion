@@ -22,6 +22,7 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 #include <iostream>
 #include <limits>
+#include "ionlib/queue.h"
 #define MAT_INDEX(mat,x,y,z) ( ((x)+(mat).roi_row_origin_) * (mat).allocated_pages_ * (mat).allocated_cols_ +\
 							  ( (y)+(mat).roi_col_origin_) * (mat).allocated_pages_ +\
 								(z)+(mat).roi_page_origin_)
@@ -136,6 +137,8 @@ namespace ion
 		template <class U>
 		friend ion::Matrix<U> Convolve(ion::Matrix<U> mat, ion::Matrix<U> kernel, typename ion::Matrix<U>::ConvFlag flags);
 		template <class U>
+		friend ion::Matrix<U> ConvolveDryRun(ion::Matrix<U> mat, ion::Matrix<U> kernel, typename ion::Matrix<U>::ConvFlag flags); //just returns a matrix the right shape
+		template <class U>
 		friend bool indexInPad(Matrix<U> mat_padded, Matrix<U> kernel, uint32_t row, uint32_t col, uint32_t page);
 		template <class U>
 		friend ion::Matrix<U> MaxPool(ion::Matrix<U> mat, uint32_t pool_size);
@@ -167,6 +170,27 @@ namespace ion
 	std::ostream& operator<< (std::ostream& out, ion::Matrix<T>& mat);
 	template <class T>
 	ion::Matrix<T> Linspace(T min, T max);
+	
+	template <class T>
+	struct ConvolveTask
+	{
+		const ion::Matrix<T>* input;
+		const ion::Matrix<T>* kernel;
+		ion::Matrix<T>* result;
+		typename ion::Matrix<T>::ConvFlag flags;
+	};
+	template <class T>
+	struct ConvolveTaskData
+	{
+		ConvolveTaskData()
+		{
+		}
+		ion::Queue<ConvolveTask<T>> task_queue;
+		ion::Queue<ConvolveTask<T>> result_queue;
+	};
+	//This will spawn num_threads threads which will wait on convolution operations in task_queue and process them
+	template <class T>
+	void InitConvolveThreads(uint32_t num_threads, ConvolveTaskData<T>& task_data);
 }; //namespace ion
 
 #endif //ION_MATRIX_H_
