@@ -74,7 +74,7 @@ namespace ion
 	template <class T>
 	void ion::Matrix<T>::DumpBinary(std::ostream& stream) const
 	{
-		LOGASSERT(continuous_);
+		LOGASSERT(contiguous_);
 		//Note that row_*cols_*pages_ may or may not be == allocated_cells due to reallocation or an ROI starting at the origin
 		//Note that *data here will never fail (even if data == NULL) becaue sizeof(*data_) is actually going to be looked up at compile time
 		//The MAT_INDEX is added in case roi_row_origin_ != 0
@@ -118,7 +118,7 @@ namespace ion
 	void ion::Matrix<T>::Fread(FILE* fin, size_t num_elements)
 	{
 		//this isn't strictly required but is easier so I'll enforce continuous until I need otherwise
-		LOGASSERT(continuous_);
+		LOGASSERT(contiguous_);
 		fread_s(data_ + MAT_INDEX(*this, 0, 0, 0), NumCells() * sizeof(T), sizeof(T), num_elements, fin);
 	}
 
@@ -127,4 +127,5 @@ namespace ion
 	template std::ostream& operator<< (std::ostream& out, ion::Matrix<double>& mat);
 	//uchar
 	template std::ostream& operator<< (std::ostream& out, ion::Matrix<uint8_t>& mat);
+	template std::ostream& operator<< (std::ostream& out, ion::Matrix<uint32_t>& mat);
 } //namespace ion

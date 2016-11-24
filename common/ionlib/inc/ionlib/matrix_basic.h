@@ -36,7 +36,7 @@ namespace ion
 		roi_row_origin_ = 0;
 		roi_col_origin_ = 0;
 		roi_page_origin_ = 0;
-		continuous_ = true;
+		contiguous_ = true;
 		is_roi_ = false;
 		format_ = FMT_ASCII;
 	}
@@ -65,7 +65,7 @@ namespace ion
 		ion::Matrix<T> rhs(rows_, cols_, pages_);
 		//this function is ROI-safe
 		//if the input is an ROI, the result will be deep coppied into the parent's data (i.e. it is still an ROI)
-		if (continuous_ && rhs.continuous_)
+		if (contiguous_ && rhs.contiguous_)
 		{
 			//Note it is NOT necessary that rows_*cols_*pages_ == allocated_cells_
 			//The MAT_INDEX is added in case roi_row_origin_ != 0
@@ -78,7 +78,7 @@ namespace ion
 			if (pages_ != 1 && ((pages_ == allocated_pages_) && (rhs.pages_ == rhs.allocated_pages_)))
 			{
 				//this means we can copy each *column* via memcpy
-				//it is implicit that we can't copy each row otherwise continuous_ would have been set
+				//it is implicit that we can't copy each row otherwise contiguous_ would have been set
 				for (uint32_t row_index = 0; row_index < rows_; ++row_index)
 				{
 					for (uint32_t col_index = 0; col_index < cols_; ++col_index)
@@ -114,7 +114,7 @@ namespace ion
 		LOGASSERT(pages_ == rhs.pages_);
 		//this function is ROI-safe
 		//if the input is an ROI, the result will be deep coppied into the parent's data (i.e. it is still an ROI)
-		if (continuous_ && rhs.continuous_)
+		if (contiguous_ && rhs.contiguous_)
 		{
 			//Note it is NOT necessary that rows_*cols_*pages_ == allocated_cells_
 			//The MAT_INDEX is added in case roi_row_origin_ != 0
@@ -127,7 +127,7 @@ namespace ion
 			if (pages_ != 1 && ((pages_ == allocated_pages_) && (rhs.pages_ == rhs.allocated_pages_)))
 			{
 				//this means we can copy each *column* via memcpy
-				//it is implicit that we can't copy each row otherwise continuous_ would have been set
+				//it is implicit that we can't copy each row otherwise contiguous_ would have been set
 				for (uint32_t row_index = 0; row_index < rows_; ++row_index)
 				{
 					for (uint32_t col_index = 0; col_index < cols_; ++col_index)
@@ -252,10 +252,10 @@ namespace ion
 	void ion::Matrix<T>::Zero()
 	{
 		//this function is ROI-safe
-		//check if the mat is continuous. If so it can simply be memset
-		if (continuous_)
+		//check if the mat is contiguous. If so it can simply be memset
+		if (contiguous_)
 		{
-			//note that you don't want to memset allocated_cells_ because the data could be continuous but not take up the whole allocated space
+			//note that you don't want to memset allocated_cells_ because the data could be contiguous but not take up the whole allocated space
 			//The MAT_INDEX is added in case roi_row_origin_ != 0
 			memset(data_ + MAT_INDEX(*this, 0, 0, 0), 0, rows_ * cols_ * pages_ * sizeof(*data_));
 		} else
@@ -385,14 +385,7 @@ namespace ion
 		result.allocated_cols_ = allocated_cols_;
 		result.allocated_pages_ = allocated_pages_;
 		result.format_ = format_;
-		//note it is not required that row_start == 0 nor that rows_ == num_rows because the data can still be continuous in the middle of the allocated region
-		if (col_start == 0 && page_start == 0 && allocated_cols_ == num_cols && allocated_pages_ == num_pages)
-		{
-			result.continuous_ = true;
-		} else
-		{
-			result.continuous_ = false;
-		}
+		result.contiguous_ = IsContiguous();
 
 		return result;
 	}
@@ -440,14 +433,7 @@ namespace ion
 		reused_roi->allocated_cols_ = allocated_cols_;
 		reused_roi->allocated_pages_ = allocated_pages_;
 		reused_roi->format_ = format_;
-		//note it is not required that row_start == 0 nor that rows_ == num_rows because the data can still be continuous in the middle of the allocated region
-		if (col_start == 0 && page_start == 0 && allocated_cols_ == num_cols && allocated_pages_ == num_pages)
-		{
-			reused_roi->continuous_ = true;
-		} else
-		{
-			reused_roi->continuous_ = false;
-		}
+		reused_roi->contiguous_ = IsContiguous();
 	}
 	template <class T>
 	uint32_t ion::Matrix<T>::rows() const
@@ -473,29 +459,29 @@ namespace ion
 	template <class T>
 	void ion::Matrix<T>::Rowcat(const Matrix<T>& rhs)
 	{
-		//this function shall only be called on an ROI and space shall be available to do the concat
-		LOGASSERT(is_roi_);
 		//verify there is enough space
-		LOGASSERT(allocated_rows_ > roi_row_origin_ + rows_ + rhs.rows_);
+		LOGASSERT(allocated_rows_ >= roi_row_origin_ + rows_ + rhs.rows_);
+		LOGASSERT(cols_ == rhs.cols_ && pages_ == rhs.pages_);
 		for (uint32_t row = 0; row < rhs.rows_; ++row)
 		{
 			for (uint32_t col = 0; col < rhs.cols_; ++col)
 			{
 				for (uint32_t page = 0; page < rhs.pages_; ++page)
 				{
-					this->At(rows_ + row, col, page) = rhs.At(row, col, page);
+					this->At(row, cols_ + col, page) = rhs.At(row, col, page);
 				}
 			}
 		}
 		rows_ += rhs.rows_;
+		//This has potential to make the matrix no longer contiguous
+		contiguous_ = IsContiguous();
 	}
 	template <class T>
 	void ion::Matrix<T>::Colcat(const Matrix<T>& rhs)
 	{
-		//this function shall only be called on an ROI and space shall be available to do the concat
-		LOGASSERT(is_roi_);
 		//verify there is enough space
-		LOGASSERT(allocated_cols_ > roi_col_origin_ + cols_ + rhs.cols_);
+		LOGASSERT(allocated_cols_ >= roi_col_origin_ + cols_ + rhs.cols_);
+		LOGASSERT(rows_ == rhs.rows_ && pages_ == rhs.pages_);
 		for (uint32_t row = 0; row < rhs.rows_; ++row)
 		{
 			for (uint32_t col = 0; col < rhs.cols_; ++col)
@@ -507,25 +493,28 @@ namespace ion
 			}
 		}
 		cols_ += rhs.cols_;
+		//This has potential to make the matrix no longer contiguous
+		contiguous_ = IsContiguous();
 	}
 	template <class T>
 	void ion::Matrix<T>::Pagecat(const Matrix<T>& rhs)
 	{
-		//this function shall only be called on an ROI and space shall be available to do the concat
-		LOGASSERT(is_roi_);
 		//verify there is enough space
-		LOGASSERT(allocated_pages_ > roi_page_origin_ + pages_ + rhs.pages_);
+		LOGASSERT(allocated_pages_ >= roi_page_origin_ + pages_ + rhs.pages_);
+		LOGASSERT(rows_ == rhs.rows_ && cols_ == rhs.cols_);
 		for (uint32_t row = 0; row < rhs.rows_; ++row)
 		{
 			for (uint32_t col = 0; col < rhs.cols_; ++col)
 			{
 				for (uint32_t page = 0; page < rhs.pages_; ++page)
 				{
-					this->At(row, col, pages_ + page) = rhs.At(row, col, page);
+					this->At(row, cols_ + col, page) = rhs.At(row, col, page);
 				}
 			}
 		}
 		pages_ += rhs.pages_;
+		//This has potential to make the matrix no longer contiguous
+		contiguous_ = IsContiguous();
 	}
 	template <class T>
 	uint64_t ion::Matrix<T>::NumDiff(const ion::Matrix<T>& rhs) const
@@ -553,6 +542,33 @@ namespace ion
 		return rows_ * cols_ * pages_;
 	}
 	template <class T>
+	bool ion::Matrix<T>::IsContiguous() const
+	{
+		//note it is not required that row_start == 0 nor that rows_ == num_rows because the data can still be contiguous in the middle of the allocated region
+		if (roi_col_origin_ == 0 && roi_page_origin_ == 0 && allocated_cols_ == cols_ && allocated_pages_ == pages_)
+		{
+			return true;
+		} else
+		{
+			return false;
+		}
+	}
+	template <class T>
+	ion::Matrix<T> ion::Matrix<T>::Map(Matrix<uint32_t>& row_indices, Matrix<uint32_t>col_indices)
+	{
+		//I haven't implemetned this for pages yet, but I could
+		LOGASSERT(pages_ == 1);
+		LOGASSERT(row_indices.rows() == col_indices.rows());
+		LOGASSERT(row_indices.cols() == 1 && row_indices.pages() == 1);
+		LOGASSERT(col_indices.cols() == 1 && col_indices.pages() == 1);
+		ion::Matrix<T> result(row_indices.rows());
+		for (uint32_t index = 0; index < result.rows_; ++index)
+		{
+			result.At(index) = At(row_indices.At(index), col_indices.At(index));
+		}
+		return result;
+	}
+	template <class T>
 	ion::Matrix<T> Linspace(T min, T max)
 	{
 		ion::Matrix<T> result((uint32_t)max - min);
@@ -566,5 +582,16 @@ namespace ion
 	}
 	//explicit instantiations
 	//double to uchar
+	template void ion::Matrix<double>::Cast(const ion::Matrix<uint32_t>& rhs);
 	template void ion::Matrix<double>::Cast(const ion::Matrix<uint8_t>& rhs);
+
+	//double
+	template ion::Matrix<double> Linspace(double min, double max);
+
+	//uchar
+	template ion::Matrix<uint8_t> Linspace(uint8_t min, uint8_t max);
+
+	//uint32_t
+	template ion::Matrix<uint32_t> Linspace(uint32_t min, uint32_t max);
+
 } //namespace ion

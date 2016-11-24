@@ -76,6 +76,8 @@ namespace ion
 		void Pagecat(const Matrix& rhs);
 		uint64_t NumDiff(const Matrix& rhs) const;
 		uint64_t NumCells() const;
+		bool IsContiguous() const;
+		Matrix Map(Matrix<uint32_t>& row_indices, Matrix<uint32_t>col_indices);
 		//serialization
 		void PrintAscii(std::ostream& stream) const;
 		void DumpBinary(std::ostream& stream) const;
@@ -92,6 +94,7 @@ namespace ion
 		void ElementwiseMultiply(const Matrix<T>& multiplier, Matrix<T>* result);
 		void ElementwiseMultiplyRotated(const Matrix<T>& multiplier, Matrix<T>* result); //conceptually rotates the matrix 180 degrees before applying
 		T Sum() const;
+		Matrix SumRows() const;
 		typedef T(*foreach_t)(T);
 		typedef T(*foreachPair_t)(T, T);
 		//call function foreach on each element and store the result in result
@@ -161,7 +164,7 @@ namespace ion
 		uint32_t allocated_rows_;
 		uint32_t allocated_cols_;
 		uint32_t allocated_pages_;
-		bool     continuous_;
+		bool     contiguous_;
 		bool     is_roi_;
 		T* data_;
 		PrintFmt format_;

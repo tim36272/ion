@@ -36,6 +36,17 @@ namespace ion
 		return sum;
 	}
 	template <class T>
+	ion::Matrix<T> ion::Matrix<T>::SumRows() const
+	{
+		ion::Matrix<T> result(rows_, 1, 1);
+		for (uint32_t row = 0; row < rows_; ++row)
+		{
+			ion::Matrix<T> in_roi = Roi(row, 1, 0 ,0, 0, 0);
+			result.At(row) = in_roi.Sum();
+		}
+		return result;
+	}
+	template <class T>
 	void ion::Matrix<T>::Foreach(typename ion::Matrix<T>::foreach_t foreach, ion::Matrix<T>* result) const
 	{
 		//this function is inplace safe
@@ -73,8 +84,7 @@ namespace ion
 	void ion::Matrix<T>::Foreach(typename ion::Matrix<T>::foreachPair_t foreach, T constant, ion::Matrix<T>* result) const
 	{
 		//this function is inplace safe
-		//make sure result is the right size
-		result->Resize(rows_, cols_, pages_);
+		LOGASSERT(result->rows_ == rows_ && result->cols_ == cols_ && result->pages_ == pages_);
 		for (uint32_t row = 0; row < rows_; ++row)
 		{
 			for (uint32_t col = 0; col < cols_; ++col)
@@ -228,8 +238,24 @@ namespace ion
 	template <class T>
 	ion::Matrix<T> operator*(const ion::Matrix<T>& lhs, const ion::Matrix<T>& rhs)
 	{
-		LOGFATAL("Not yet implemented");
-		Matrix<T> result;
+		uint32_t c, d, k;
+		T sum = static_cast<T>(0);
+		LOGASSERT(rhs.pages_ == 1 && lhs.pages_ == 1);
+		LOGASSERT(lhs.cols_ == rhs.rows_);
+		Matrix<T> result(lhs.rows_,rhs.cols_);
+		for (c = 0; c < lhs.rows_; c++)
+		{
+			for (d = 0; d < rhs.cols_; d++)
+			{
+				for (k = 0; k < rhs.rows_; k++)
+				{
+					sum = sum + lhs.data_[MAT_INDEX(lhs,c,k,0)] * rhs.data_[MAT_INDEX(rhs,k,d,0)];
+				}
+
+				result.data_[MAT_INDEX(result,c,d,0)] = sum;
+				sum = static_cast<T>(0);;
+			}
+		}
 		return result;
 	}
 	template <class T>
@@ -254,7 +280,7 @@ namespace ion
 		LOGASSERT(((rhs.rows_ == 1) ^ (rhs.cols_ == 1)) ^ (rhs.pages_ == 1));
 		T result = static_cast<T>(0);
 		//interestingly, if the matrix is continuous we can do it by index
-		if (continuous_ && rhs.continuous_)
+		if (contiguous_ && rhs.contiguous_)
 		{
 			for (uint32_t index = 0; index < rhs.allocated_cells_; ++index)
 			{
@@ -425,4 +451,11 @@ namespace ion
 	template Matrix<uint8_t> operator*(const Matrix<uint8_t>& lhs, const Matrix<uint8_t>& rhs);
 	template Matrix<uint8_t> operator*(const Matrix<uint8_t>& lhs, uint8_t rhs);
 	template Matrix<uint8_t> operator/(const Matrix<uint8_t>& lhs, uint8_t rhs);
+	//uchar
+	template Matrix<uint32_t> operator+(const Matrix<uint32_t>& lhs, const Matrix<uint32_t>& rhs);
+	template Matrix<uint32_t> operator+(const Matrix<uint32_t>& lhs, uint32_t rhs);
+	template Matrix<uint32_t> operator-(const Matrix<uint32_t>& lhs, const Matrix<uint32_t>& rhs);
+	template Matrix<uint32_t> operator*(const Matrix<uint32_t>& lhs, const Matrix<uint32_t>& rhs);
+	template Matrix<uint32_t> operator*(const Matrix<uint32_t>& lhs, uint32_t rhs);
+	template Matrix<uint32_t> operator/(const Matrix<uint32_t>& lhs, uint32_t rhs);
 } //namespace ion
