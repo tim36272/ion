@@ -49,6 +49,11 @@ namespace ion
 		return left - right;
 	}
 	template <class T>
+	inline T SubtractSwap(T left, T right)
+	{
+		return right - left;
+	}
+	template <class T>
 	inline T Multiply(T left, T right)
 	{
 		return left * right;
@@ -59,6 +64,11 @@ namespace ion
 		return left / right;
 	}
 	template <class T>
+	inline T SwapDivide(T left, T right)
+	{
+		return right / left;
+	}
+	template <class T>
 	inline T Exp(T in)
 	{
 		return static_cast<T>(exp(static_cast<double>(in)));
@@ -66,6 +76,7 @@ namespace ion
 	template <class T>
 	inline T Log(T in)
 	{
+		LOGASSERT(in > static_cast<T>(0));
 		return static_cast<T>(log(static_cast<double>(in)));
 	}
 	//returns 0 for false and 1 for true (ion::Matrix::operator== depends on this behavior)
@@ -73,6 +84,18 @@ namespace ion
 	inline uint32_t Compare(T left, T right)
 	{
 		return (left == right) ? 1 : 0;
+	}
+	//derivative of tanh function
+	template <class T>
+	inline T derivative_tanh(T in)
+	{
+		double temp = std::tanh(static_cast<double>(in);
+		return static_cast<T>(1.0 - temp*temp));
+	}
+	template <class T>
+	inline bool Equal(T lhs, T rhs)
+	{
+		return lhs == rhs;
 	}
 };
 #endif //ION_MATH_H_

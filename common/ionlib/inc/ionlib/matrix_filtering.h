@@ -20,7 +20,7 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 namespace ion
 {
 	template <class T>
-	bool indexInPad(Matrix<T> mat_padded, Matrix<T> kernel, uint32_t row, uint32_t col, uint32_t page)
+	bool indexInPad(const Matrix<T>& mat_padded, const Matrix<T>& kernel, uint32_t row, uint32_t col, uint32_t page)
 	{
 		if (row > kernel.rows_ / 2 && row < (mat_padded.rows_ - kernel.rows_ / 2))
 		{
@@ -43,7 +43,7 @@ namespace ion
 		}
 	}
 	template <class T>
-	ion::Matrix<T> Convolve(ion::Matrix<T> mat, ion::Matrix<T> kernel, typename ion::Matrix<T>::ConvFlag flags)
+	ion::Matrix<T> Convolve(const ion::Matrix<T>& mat, const ion::Matrix<T>& kernel, typename ion::Matrix<T>::ConvFlag flags)
 	{
 		LOGASSERT(kernel.rows_ % 2 == 1);
 		LOGASSERT(kernel.cols_ % 2 == 1);
@@ -166,11 +166,12 @@ namespace ion
 				}
 			}
 		}
+
 		return output;
 	}
 
 	template <class T>
-	ion::Matrix<T> ConvolveDryRun(ion::Matrix<T> mat, ion::Matrix<T> kernel, typename ion::Matrix<T>::ConvFlag flags)
+	ion::Matrix<T> ConvolveDryRun(const ion::Matrix<T>& mat, const ion::Matrix<T>& kernel, typename ion::Matrix<T>::ConvFlag flags)
 	{
 		LOGASSERT(kernel.rows_ % 2 == 1);
 		LOGASSERT(kernel.cols_ % 2 == 1);
@@ -197,7 +198,7 @@ namespace ion
 		return output;
 	}
 	template <class T>
-	ion::Matrix<T> MaxPool(ion::Matrix<T> mat, uint32_t pool_size)
+	ion::Matrix<T> MaxPool(const ion::Matrix<T>& mat, uint32_t pool_size)
 	{
 		uint32_t result_rows  = ion::Max(1U, mat.rows_ / pool_size);
 		uint32_t result_cols  = ion::Max(1U, mat.cols_ / pool_size);
@@ -223,7 +224,7 @@ namespace ion
 		return result;
 	}
 	template <class T>
-	ion::Matrix<T> Softmax(ion::Matrix<T> mat)
+	ion::Matrix<T> Softmax(const ion::Matrix<T>& mat)
 	{
 		//I don't know how to define this for a 3D matrix, for now make it 2D
 		LOGASSERT(mat.pages_ == 1);
@@ -236,6 +237,7 @@ namespace ion
 			ion::Matrix<T> temp(1, mat.cols_);
 			mat.Roi(row,1).Foreach(&ion::Exp, &temp);
 			T sum = temp.Sum();
+			LOGASSERT(sum > static_cast<T>(0));
 			//Calculate softmax
 			ion::Matrix<T> result_roi = result.Roi(row, 1);
 			temp.Foreach(&ion::Divide, sum, &result_roi);
@@ -265,25 +267,6 @@ namespace ion
 			ion::StartThread(ConvolutionThread<double>, &task_data);
 		}
 	}
-	//explicit instantiations
-	//double
-	template ion::Matrix<double> Convolve(ion::Matrix<double> mat, ion::Matrix<double> kernel, ion::Matrix<double>::ConvFlag flags);
-	template ion::Matrix<double> ConvolveDryRun(ion::Matrix<double> mat, ion::Matrix<double> kernel, ion::Matrix<double>::ConvFlag flags);
-	template ion::Matrix<double> MaxPool(ion::Matrix<double> mat, uint32_t pool_size);
-	template ion::Matrix<double> Softmax(ion::Matrix<double> mat);
-	template void InitConvolveThreads(uint32_t num_threads, ConvolveTaskData<double>& task_data);
-	//uchar
-	template ion::Matrix<uint8_t> Convolve		 (ion::Matrix<uint8_t> mat, ion::Matrix<uint8_t> kernel, ion::Matrix<uint8_t>::ConvFlag flags);
-	template ion::Matrix<uint8_t> ConvolveDryRun (ion::Matrix<uint8_t> mat, ion::Matrix<uint8_t> kernel, ion::Matrix<uint8_t>::ConvFlag flags);
-	template ion::Matrix<uint8_t> MaxPool		 (ion::Matrix<uint8_t> mat, uint32_t pool_size);
-	template ion::Matrix<uint8_t> Softmax		 (ion::Matrix<uint8_t> mat);
-	template void InitConvolveThreads(uint32_t num_threads, ConvolveTaskData<uint8_t>& task_data);
-	//uchar
-	template ion::Matrix<uint32_t> Convolve(ion::Matrix<uint32_t> mat, ion::Matrix<uint32_t> kernel, ion::Matrix<uint32_t>::ConvFlag flags);
-	template ion::Matrix<uint32_t> ConvolveDryRun(ion::Matrix<uint32_t> mat, ion::Matrix<uint32_t> kernel, ion::Matrix<uint32_t>::ConvFlag flags);
-	template ion::Matrix<uint32_t> MaxPool(ion::Matrix<uint32_t> mat, uint32_t pool_size);
-	template ion::Matrix<uint32_t> Softmax(ion::Matrix<uint32_t> mat);
-	template void InitConvolveThreads(uint32_t num_threads, ConvolveTaskData<uint32_t>& task_data);
 
 
 } //namespace ion

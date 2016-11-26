@@ -37,12 +37,13 @@ namespace ion
 	}
 	void AppFail(int32_t result)
 	{
+		LOGINFO("Failed with result %d", result);
 		fflush(stdout);
 		fflush(stderr);
 #ifndef NDEBUG
 		__debugbreak();
 #else
-		while (true);
+		quit(result);
 #endif
 
 	}

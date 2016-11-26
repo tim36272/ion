@@ -21,6 +21,7 @@ namespace ion
 {
 	static double counter_frequency = 0.0;
 	static int64_t counter_origin = 0;
+	static double timer_origin = 0.0;
 	//will be called by backend if the user doesn't call it, you can call this manually if you care about the first measurement being as accurate as possible
 	void TimeInit()
 	{
@@ -30,6 +31,7 @@ namespace ion
 		LARGE_INTEGER counter;
 		QueryPerformanceCounter(&counter);
 		counter_origin = counter.QuadPart;
+		timer_origin = TimeGet();
 	}
 	//fast-query timer, may be the number of seconds since the program started
 	double TimeGet()
@@ -40,7 +42,7 @@ namespace ion
 		}
 		LARGE_INTEGER counter;
 		QueryPerformanceCounter(&counter);
-		return (counter.QuadPart-counter_origin) / counter_frequency;
+		return ((counter.QuadPart-counter_origin) / counter_frequency) - timer_origin;
 	}
 	//gives time since January 1, 1970 at midnight
 	double TimeGetEpoch()

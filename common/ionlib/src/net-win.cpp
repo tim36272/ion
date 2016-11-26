@@ -94,7 +94,7 @@ namespace ion
 		send_to_addr.sin_addr.s_addr = address.as_integer();
 
 		int32_t bytes_sent = sendto(this->socket_handle_, buf, len, 0, (sockaddr*)&send_to_addr, sizeof(sockaddr_in));
-		if (bytes_sent != len)
+		if ((uint32_t)bytes_sent != len)
 		{
 			LOGERROR("Failed to send packet to %s:%hu, len: %u, error %d: %s", address.as_string(), port, GetLastError(), ion::getLastErrorString());
 			return ion::Error::Get(ion::Error::SOCKET);

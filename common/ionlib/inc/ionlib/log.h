@@ -42,6 +42,15 @@ ion::AppFail(-1);\
   LOGFATAL("Assertion failed: "#b" INFO: "##__VA_ARGS__);\
   }\
 }
+#ifdef ION_NO_SANITY_CHECK
+#define LOGSANITY(...)
+#else
+#define LOGSANITY(b,...) {\
+  if(!(b)) {\
+  LOGFATAL("Sanity check failed: "#b" INFO: "##__VA_ARGS__);\
+  }\
+}
+#endif
 
 } //namespace ion
 #endif //IONLOG_H_

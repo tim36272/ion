@@ -19,6 +19,7 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include <stdarg.h>
 #include "ionlib\app_util.h"
+#include "ionlib\time.h"
 
 namespace ion
 {
@@ -60,7 +61,7 @@ namespace ion
 			}
 			cursor++;
 		}
-		int num_bytes_written = snprintf(buffer, IONLOG_MAX_MESSAGE_LENGTH, "%s:%d ", file, line);
+		int num_bytes_written = snprintf(buffer, IONLOG_MAX_MESSAGE_LENGTH, "%9.3lf %s:%d ", ion::TimeGet()/1000.0, file, line);
 		num_bytes_written += vsnprintf(buffer + num_bytes_written, IONLOG_MAX_MESSAGE_LENGTH - num_bytes_written, format, args);
 		num_bytes_written += snprintf(buffer + num_bytes_written, IONLOG_MAX_MESSAGE_LENGTH - num_bytes_written, "\r\n");
 		printf(buffer);

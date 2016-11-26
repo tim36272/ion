@@ -18,15 +18,58 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #include "ionlib/math.h"
 namespace ion
 {
+	static uint32_t allocations_g = 0;
+	static uint32_t deletions_g = 0;
+	uint32_t GetMatrixAllocations()
+	{
+		LOGASSERT(allocations_g >= deletions_g);
+		return allocations_g;
+	}
+	uint32_t GetMatrixDeletions()
+	{
+		LOGASSERT(allocations_g >= deletions_g);
+		return deletions_g;
+	}
+
 	//////////////////////////////////////////////////// Constructors
+	//template <class T>
+	//ion::Matrix<T>::Matrix()
+	//{
+	//	LOGASSERT(allocations_g >= deletions_g);
+
+	//	//consider checking here if rows*cols*pages fits in a 64 bit integer
+	//	allocated_cells_ = 0;
+	//	data_ = nullptr;
+	//	rows_ = 0;
+	//	cols_ = 0;
+	//	pages_ = 0;
+	//	allocated_rows_ = 0;
+	//	allocated_cols_ = 0;
+	//	allocated_pages_ = 0;
+	//	roi_row_origin_ = 0;
+	//	roi_col_origin_ = 0;
+	//	roi_page_origin_ = 0;
+	//	contiguous_ = true;
+	//	is_roi_ = false;
+	//	format_ = FMT_ASCII;
+	//}
 	template <class T>
 	ion::Matrix<T>::Matrix(uint32_t rows, uint32_t cols = 1, uint32_t pages = 1)
 	{
+		LOGASSERT(allocations_g >= deletions_g);
+
 		//consider checking here if rows*cols*pages fits in a 64 bit integer
 		allocated_cells_ = (uint64_t)rows * (uint64_t)cols * (uint64_t)pages;
 		//allocate the matrix
-		data_ = new (std::nothrow) T[allocated_cells_];
-		LOGASSERT(data_ != NULL);
+		if (allocated_cells_ > 0)
+		{
+			data_ = new T[allocated_cells_];
+			allocations_g++;
+			LOGASSERT(data_ != NULL);
+		} else
+		{
+			data_ = nullptr;
+		}
 		rows_ = rows;
 		cols_ = cols;
 		pages_ = pages;
@@ -39,6 +82,87 @@ namespace ion
 		contiguous_ = true;
 		is_roi_ = false;
 		format_ = FMT_ASCII;
+	}
+	template <class T>
+	ion::Matrix<T>::~Matrix()
+	{
+		LOGASSERT(allocations_g >= deletions_g);
+
+		if (!is_roi_)
+		{
+			delete[] data_;
+			deletions_g++;
+		}
+	}
+	template <class T>
+	ion::Matrix<T>::Matrix(const ion::Matrix<T>& rhs)
+	{
+		LOGASSERT(allocations_g >= deletions_g);
+
+		LOGASSERT(this != &rhs);
+		allocated_cells_ = rhs.allocated_cells_;
+		if (!rhs.is_roi_)
+		{
+			data_ = new T[rhs.allocated_cells_];
+			allocations_g++;
+			//copy the data
+			memcpy(data_, rhs.data_, allocated_cells_ * sizeof(T));
+		} else
+		{
+			data_ = rhs.data_;
+		}
+		LOGASSERT(data_ != NULL);
+		rows_ = rhs.rows_;
+		cols_ = rhs.cols_;
+		pages_ = rhs.pages_;
+		allocated_rows_ = rhs.allocated_rows_;
+		allocated_cols_ = rhs.allocated_cols_;
+		allocated_pages_ = rhs.allocated_pages_;
+		roi_row_origin_ = rhs.roi_row_origin_;
+		roi_col_origin_ = rhs.roi_col_origin_;
+		roi_page_origin_ = rhs.roi_page_origin_;
+		contiguous_ = rhs.contiguous_;
+		is_roi_ = rhs.is_roi_;
+		format_ = rhs.format_;
+	}
+	template <class T>
+	ion::Matrix<T> ion::Matrix<T>::operator=(const ion::Matrix<T>& rhs)
+	{
+		LOGASSERT(allocations_g >= deletions_g);
+
+		LOGASSERT(this != &rhs);
+		//delete *this
+		if (!is_roi_)
+		{
+			delete data_;
+			deletions_g++;
+		}
+		allocated_cells_ = rhs.allocated_cells_;
+		if (!rhs.is_roi_)
+		{
+			data_ = new T[rhs.allocated_cells_];
+			allocations_g++;
+
+			//copy the data
+			memcpy(data_, rhs.data_, allocated_cells_ * sizeof(T));
+		} else
+		{
+			data_ = rhs.data_;
+		}
+		LOGASSERT(data_ != NULL);
+		rows_ = rhs.rows_;
+		cols_ = rhs.cols_;
+		pages_ = rhs.pages_;
+		allocated_rows_ = rhs.allocated_rows_;
+		allocated_cols_ = rhs.allocated_cols_;
+		allocated_pages_ = rhs.allocated_pages_;
+		roi_row_origin_ = rhs.roi_row_origin_;
+		roi_col_origin_ = rhs.roi_col_origin_;
+		roi_page_origin_ = rhs.roi_page_origin_;
+		contiguous_ = rhs.contiguous_;
+		is_roi_ = rhs.is_roi_;
+		format_ = rhs.format_;
+		return *this;
 	}
 	//////////////////////////////////////////////////// Elementry Operations
 	template <class T>
@@ -157,14 +281,28 @@ namespace ion
 	template <class T>
 	void ion::Matrix<T>::Swap(Matrix& rhs)
 	{
-		//this operation on ROIs might make sense but I'm not sure, so disallow swapping ROIs until I have a use case for it
+		//see SwapRoi for ROI-enabled version
 		LOGASSERT(!is_roi_);
 		LOGASSERT(!rhs.is_roi_);
 		//make a shallow copy and use that to swap
-		Matrix temp;
-		temp = rhs;
+		Matrix temp = rhs;
 		rhs = *this;
 		*this = temp;
+	}
+	template <class T>
+	void ion::Matrix<T>::SwapRoi(Matrix& rhs)
+	{
+		LOGASSERT(rows_ == rhs.rows_ && cols_ == rhs.cols_ && pages_ == rhs.pages_);
+		for (uint32_t row_index = 0; row_index < rows_; ++row_index)
+		{
+			for (uint32_t col_index = 0; col_index < cols_; ++col_index)
+			{
+				for (uint32_t page_index = 0; page_index < pages_; ++page_index)
+				{
+					std::swap(At(row_index, col_index, page_index),rhs.At(row_index, col_index, page_index));
+				}
+			}
+		}
 	}
 	template <class T>
 	template <class OtherType>
@@ -187,16 +325,41 @@ namespace ion
 			}
 		}
 	}
-
+	void InferDimensions(uint64_t size, uint32_t& rows, uint32_t& cols, uint32_t& pages)
+	{
+		if (rows == 0)
+		{
+			if (cols == 0 || pages == 0)
+			{
+				LOGFATAL("Invalid attempt to infer parameters")
+			}
+			rows = (uint32_t)(size / cols / pages);
+		} else if (cols == 0)
+		{
+			if (rows == 0 || pages == 0)
+			{
+				LOGFATAL("Invalid attempt to infer parameters")
+			}
+			cols = (uint32_t)(size / rows / pages);
+		} else if (pages == 0)
+		{
+			if (rows == 0 || cols == 0)
+			{
+				LOGFATAL("Invalid attempt to infer parameters")
+			}
+			pages = (uint32_t)(size / rows / cols);
+		}
+	}
 	template <class T>
 	void ion::Matrix<T>::Reshape(uint32_t new_rows, uint32_t new_cols = 1, uint32_t new_pages = 1)
 	{
+		//note that old_size is not necessarily equal to allocated_cells_ because the matrix could be a 3x3 allocated in 4x4 cells, for example
+		uint64_t old_size = (uint64_t)rows_ * (uint64_t)cols_* (uint64_t)pages_;
+		InferDimensions(old_size, new_rows, new_cols, new_pages);
 		//you cannot reshape an ROI since it doesn't own the data. Deep copy it first.
 		LOGASSERT(!is_roi_);
 		//this function maintains the data, whereas Resize doesn't have to. For example if *this is a row vector and you resize it to a column vector it will work, whereas Resize may not
 		uint64_t new_size = (uint64_t)new_rows * (uint64_t)new_cols * (uint64_t)new_pages;
-		//note that old_size is not necessarily equal to allocated_cells_ because the matrix could be a 3x3 allocated in 4x4 cells, for example
-		uint64_t old_size = (uint64_t)rows_ * (uint64_t)cols_* (uint64_t)pages_;
 		LOGASSERT(new_size == old_size);
 		//Since reshape only accepts new shapes of the same total size, there is no chance that data_ has to be reallocated
 		//But for now we will allocate new space to do the reshape. Note that this isn't necessary: a scheme could be developed to reshape without an extra allocation
@@ -245,6 +408,8 @@ namespace ion
 	template <class T>
 	const T& ion::Matrix<T>::At(uint32_t x, uint32_t y = 0, uint32_t z = 0) const
 	{
+		//Since the const version of this function is being called it must be that we are going to read that value, not set it. So do a sanity check that the values is good
+		LOGSANITY(!isnan((double)data_[MAT_INDEX(*this, x, y, z)]));
 		//this function is ROI-safe
 		return data_[MAT_INDEX(*this, x, y, z)];
 	}
@@ -370,7 +535,7 @@ namespace ion
 				LOGFATAL("Creating an ROI from an ROI, and the new ROI extends past the original ROI. Original ROI has size (%u,%u,%u). New ROI starts at (%u,%u,%u) and has size (%u,%u,%u)", rows_, cols_, pages_, row_start, col_start, page_start, num_rows, num_cols, num_pages);
 			}
 		}
-		Matrix result;
+		Matrix result(0,0,0);
 
 		result.is_roi_ = true;
 		result.data_ = data_;
@@ -468,7 +633,7 @@ namespace ion
 			{
 				for (uint32_t page = 0; page < rhs.pages_; ++page)
 				{
-					this->At(row, cols_ + col, page) = rhs.At(row, col, page);
+					this->At(rows_ + row, col, page) = rhs.At(row, col, page);
 				}
 			}
 		}
@@ -508,7 +673,7 @@ namespace ion
 			{
 				for (uint32_t page = 0; page < rhs.pages_; ++page)
 				{
-					this->At(row, cols_ + col, page) = rhs.At(row, col, page);
+					this->At(row, col, pages_ + page) = rhs.At(row, col, page);
 				}
 			}
 		}
@@ -554,7 +719,7 @@ namespace ion
 		}
 	}
 	template <class T>
-	ion::Matrix<T> ion::Matrix<T>::Map(Matrix<uint32_t>& row_indices, Matrix<uint32_t>col_indices)
+	ion::Matrix<T> ion::Matrix<T>::Map(const Matrix<uint32_t>& row_indices, const Matrix<uint32_t>&col_indices) const
 	{
 		//I haven't implemetned this for pages yet, but I could
 		LOGASSERT(pages_ == 1);
@@ -564,14 +729,45 @@ namespace ion
 		ion::Matrix<T> result(row_indices.rows());
 		for (uint32_t index = 0; index < result.rows_; ++index)
 		{
-			result.At(index) = At(row_indices.At(index), col_indices.At(index));
+			uint32_t row_index = row_indices.At(index);
+			uint32_t col_index = col_indices.At(index);
+			LOGASSERT(row_index < rows_);
+			LOGASSERT(col_index < cols_);
+			result.At(index) = At(row_index,col_index);
+			LOGASSERT(result.At(index) > static_cast<T>(0));
 		}
+		return result;
+	}
+	template <class T>
+	void ion::Matrix<T>::AssertNotNan() const
+	{
+		for (uint32_t row = 0; row < rows_; ++row)
+		{
+			for (uint32_t col = 0; col < cols_; ++col)
+			{
+				for (uint32_t page = 0; page < pages_; ++page)
+				{
+					LOGASSERT(!isnan((double)At(row, col, page)));
+				}
+			}
+		}
+	}
+	template <class T>
+	const ion::Matrix<T> ion::Matrix<T>::View(uint32_t rows, uint32_t cols, uint32_t pages) const
+	{
+		uint64_t old_size = (uint64_t)rows_ * (uint64_t)cols_* (uint64_t)pages_;
+		InferDimensions(old_size, rows, cols, pages);
+		LOGASSERT(contiguous_ && rows_ * cols_ * pages_ == rows*cols*pages);
+		Matrix<T> result = Roi(0, 0, 0, 0, 0, 0);
+		result.rows_ = rows;
+		result.cols_ = cols;
+		result.pages_ = pages;
 		return result;
 	}
 	template <class T>
 	ion::Matrix<T> Linspace(T min, T max)
 	{
-		ion::Matrix<T> result((uint32_t)max - min);
+		ion::Matrix<T> result((uint32_t)(max - min));
 		uint32_t row_idx = 0;
 		for (T idx = min; idx < max; ++idx)
 		{
@@ -580,18 +776,6 @@ namespace ion
 		}
 		return result;
 	}
-	//explicit instantiations
-	//double to uchar
-	template void ion::Matrix<double>::Cast(const ion::Matrix<uint32_t>& rhs);
-	template void ion::Matrix<double>::Cast(const ion::Matrix<uint8_t>& rhs);
 
-	//double
-	template ion::Matrix<double> Linspace(double min, double max);
-
-	//uchar
-	template ion::Matrix<uint8_t> Linspace(uint8_t min, uint8_t max);
-
-	//uint32_t
-	template ion::Matrix<uint32_t> Linspace(uint32_t min, uint32_t max);
 
 } //namespace ion

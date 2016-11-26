@@ -111,9 +111,24 @@ namespace ion
 			}
 		}
 	}
-
 	template <class T>
-	void ion::Matrix<T>::ElementwiseMultiply(const Matrix<T>& multiplier, Matrix<T>* result)
+	void ion::Matrix<T>::Foreach(typename ion::Matrix<T>::foreachPairUsrdata_t foreach, void* usrdata, ion::Matrix<T> *result) const
+	{
+		LOGASSERT(result->rows_ == rows_ && result->cols_ == cols_ && result->pages_ == pages_);
+		//this function is inplace safe
+		for (uint32_t row = 0; row < rows_; ++row)
+		{
+			for (uint32_t col = 0; col < cols_; ++col)
+			{
+				for (uint32_t page = 0; page < pages_; ++page)
+				{
+					result->data_[MAT_INDEX(*result, row, col, page)] = foreach(data_[MAT_INDEX(*this, row, col, page)], usrdata);
+				}
+			}
+		}
+	}
+	template <class T>
+	void ion::Matrix<T>::ElementwiseMultiply(const Matrix<T>& multiplier, Matrix<T>* result) const
 	{
 		//matrices must be the same shape
 		//This function is ROI-safe
@@ -138,7 +153,7 @@ namespace ion
 		}
 	}
 	template <class T>
-	void ion::Matrix<T>::ElementwiseMultiplyRotated(const Matrix<T>& multiplier, Matrix<T>* result)
+	void ion::Matrix<T>::ElementwiseMultiplyRotated(const Matrix<T>& multiplier, Matrix<T>* result) const
 	{
 		//matrices must be the same shape
 		//This function is ROI-safe
@@ -236,6 +251,13 @@ namespace ion
 		return result;
 	}
 	template <class T>
+	ion::Matrix<T> operator-(T lhs, const Matrix<T>& rhs)
+	{
+		ion::Matrix<T> result(rhs.rows_, rhs.cols_, rhs.pages_);
+		lhs.Foreach(&ion::SubtractSwap, lhs, &result);
+		return result;
+	}
+	template <class T>
 	ion::Matrix<T> operator*(const ion::Matrix<T>& lhs, const ion::Matrix<T>& rhs)
 	{
 		uint32_t c, d, k;
@@ -249,11 +271,12 @@ namespace ion
 			{
 				for (k = 0; k < rhs.rows_; k++)
 				{
+
 					sum = sum + lhs.data_[MAT_INDEX(lhs,c,k,0)] * rhs.data_[MAT_INDEX(rhs,k,d,0)];
 				}
 
 				result.data_[MAT_INDEX(result,c,d,0)] = sum;
-				sum = static_cast<T>(0);;
+				sum = static_cast<T>(0);
 			}
 		}
 		return result;
@@ -270,6 +293,13 @@ namespace ion
 	{
 		ion::Matrix<T> result(lhs.rows_, lhs.cols_, lhs.pages_);
 		lhs.Foreach(&ion::Divide, rhs, &result);
+		return result;
+	}
+	template <class T>
+	ion::Matrix<T> operator/(T lhs, const ion::Matrix<T>& rhs)
+	{
+		ion::Matrix<T> result(rhs.rows_, rhs.cols_, rhs.pages_);
+		lhs.Foreach(&ion::SwapDivide, lhs, &result);
 		return result;
 	}
 	template <class T>
@@ -351,16 +381,22 @@ namespace ion
 		//this function is ROI-safe
 		//this function is inplace safe
 		//this could be done for 3D matrices but I don't support that yet
-		LOGASSERT(pages_ == 0);
+		LOGASSERT(pages_ == 1 && result->pages_ == 1);
+		LOGFATAL("No yey implemented");
 	}
 	template <class T>
 	void ion::Matrix<T>::Inverse(ion::Matrix<T>* result )
 	{
+		//this could be done for 3D matrices but I don't support that yet
+
+		LOGASSERT(pages_ == 1 && result->pages_ == 1);
 		LOGFATAL("Not yet implemented");
 	}
 	template <class T>
 	T ion::Matrix<T>::Determinent() const
 	{
+		//this could be done for 3D matrices but I don't support that yet
+		LOGASSERT(pages_ == 1);
 		LOGFATAL("Not yet implemented");
 		T result = static_cast<T>(0);
 		return result;
@@ -373,8 +409,9 @@ namespace ion
 	template <class T>
 	T ion::Matrix<T>::Max() const
 	{
-		T result;
+		T result = std::numeric_limits<T>::lowest();
 		Foreach(&ion::Max, &result);
+		LOGASSERT(!isnan((float)result));
 		return result;
 	}
 	template <class T>
@@ -386,6 +423,7 @@ namespace ion
 	ion::Matrix<T> ion::Matrix<T>::Log() const
 	{
 		ion::Matrix<T> result(rows_, cols_, pages_);
+		LOGASSERT(data_[0] > static_cast<T>(0));
 		Foreach(&ion::Log, &result);
 		return result;
 	}
@@ -418,11 +456,12 @@ namespace ion
 	{
 		//I don't know what this means for a 3D matrix so disallow it:
 		LOGASSERT(pages_ == 1);
+		LOGASSERT(dim == 1);
 
 		ion::Matrix<uint32_t> result(rows_);
 		for (uint32_t row = 0; row < rows_; ++row)
 		{
-			uint32_t max_pos;
+			uint32_t max_pos = 0;
 			T max = std::numeric_limits<T>::lowest();
 			for (uint32_t col = 0; col < cols_; ++col)
 			{
@@ -436,26 +475,25 @@ namespace ion
 		}
 		return result;
 	}
-	//explicit instantiations
-	//double
-	template Matrix<double> operator+(const Matrix<double>& lhs, const Matrix<double>& rhs);
-	template Matrix<double> operator+(const Matrix<double>& lhs, double rhs);
-	template Matrix<double> operator-(const Matrix<double>& lhs, const Matrix<double>& rhs);
-	template Matrix<double> operator*(const Matrix<double>& lhs, const Matrix<double>& rhs);
-	template Matrix<double> operator*(const Matrix<double>& lhs, double rhs);
-	template Matrix<double> operator/(const Matrix<double>& lhs, double rhs);
-	//uchar
-	template Matrix<uint8_t> operator+(const Matrix<uint8_t>& lhs, const Matrix<uint8_t>& rhs);
-	template Matrix<uint8_t> operator+(const Matrix<uint8_t>& lhs, uint8_t rhs);
-	template Matrix<uint8_t> operator-(const Matrix<uint8_t>& lhs, const Matrix<uint8_t>& rhs);
-	template Matrix<uint8_t> operator*(const Matrix<uint8_t>& lhs, const Matrix<uint8_t>& rhs);
-	template Matrix<uint8_t> operator*(const Matrix<uint8_t>& lhs, uint8_t rhs);
-	template Matrix<uint8_t> operator/(const Matrix<uint8_t>& lhs, uint8_t rhs);
-	//uchar
-	template Matrix<uint32_t> operator+(const Matrix<uint32_t>& lhs, const Matrix<uint32_t>& rhs);
-	template Matrix<uint32_t> operator+(const Matrix<uint32_t>& lhs, uint32_t rhs);
-	template Matrix<uint32_t> operator-(const Matrix<uint32_t>& lhs, const Matrix<uint32_t>& rhs);
-	template Matrix<uint32_t> operator*(const Matrix<uint32_t>& lhs, const Matrix<uint32_t>& rhs);
-	template Matrix<uint32_t> operator*(const Matrix<uint32_t>& lhs, uint32_t rhs);
-	template Matrix<uint32_t> operator/(const Matrix<uint32_t>& lhs, uint32_t rhs);
+	template <class T>
+	uint64_t ion::Matrix<T>::Countif(typename ion::Matrix<T>::foreachPairBool_t foreach, T constant) const
+	{
+		uint64_t sum = 0;
+		//this function is inplace safe
+		for (uint32_t row = 0; row < rows_; ++row)
+		{
+			for (uint32_t col = 0; col < cols_; ++col)
+			{
+				for (uint32_t page = 0; page < pages_; ++page)
+				{
+					if (foreach(data_[MAT_INDEX(*this, row, col, page)], constant))
+					{
+						sum++;
+					}
+				}
+			}
+		}
+		return sum;
+	}
+
 } //namespace ion

@@ -93,7 +93,7 @@ namespace ion
 		return buf.str();
 	}
 	template <class T>
-	std::ostream& operator<< (std::ostream& out, ion::Matrix<T>& mat)
+	std::ostream& operator<< (std::ostream& out, const ion::Matrix<T>& mat)
 	{
 		if (mat.GetPrintFmt() == mat.FMT_ASCII)
 		{
@@ -122,10 +122,4 @@ namespace ion
 		fread_s(data_ + MAT_INDEX(*this, 0, 0, 0), NumCells() * sizeof(T), sizeof(T), num_elements, fin);
 	}
 
-	//explicit instantiations
-	//double
-	template std::ostream& operator<< (std::ostream& out, ion::Matrix<double>& mat);
-	//uchar
-	template std::ostream& operator<< (std::ostream& out, ion::Matrix<uint8_t>& mat);
-	template std::ostream& operator<< (std::ostream& out, ion::Matrix<uint32_t>& mat);
 } //namespace ion
