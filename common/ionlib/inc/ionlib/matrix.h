@@ -210,8 +210,8 @@ namespace ion
 	template <class T>
 	void InitConvolveThreads(uint32_t num_threads, ConvolveTaskData<T>& task_data);
 
-	uint32_t GetMatrixAllocations();
-	uint32_t GetMatrixDeletions();
+	uint64_t GetMatrixAllocations();
+	uint64_t GetMatrixDeletions();
 }; //namespace ion
 
 #endif //ION_MATRIX_H_

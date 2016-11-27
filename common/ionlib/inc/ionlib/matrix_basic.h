@@ -18,16 +18,16 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #include "ionlib/math.h"
 namespace ion
 {
-	static uint32_t allocations_g = 0;
-	static uint32_t deletions_g = 0;
-	uint32_t GetMatrixAllocations()
+	static uint64_t allocations_g = 0;
+	static uint64_t deletions_g = 0;
+	uint64_t GetMatrixAllocations()
 	{
-		LOGASSERT(allocations_g >= deletions_g);
+		LOGWEAKASSERT(allocations_g >= deletions_g);
 		return allocations_g;
 	}
-	uint32_t GetMatrixDeletions()
+	uint64_t GetMatrixDeletions()
 	{
-		LOGASSERT(allocations_g >= deletions_g);
+		LOGWEAKASSERT(allocations_g >= deletions_g);
 		return deletions_g;
 	}
 
@@ -56,7 +56,7 @@ namespace ion
 	template <class T>
 	ion::Matrix<T>::Matrix(uint32_t rows, uint32_t cols = 1, uint32_t pages = 1)
 	{
-		LOGASSERT(allocations_g >= deletions_g);
+		LOGWEAKASSERT(allocations_g >= deletions_g);
 
 		//consider checking here if rows*cols*pages fits in a 64 bit integer
 		allocated_cells_ = (uint64_t)rows * (uint64_t)cols * (uint64_t)pages;
@@ -86,7 +86,7 @@ namespace ion
 	template <class T>
 	ion::Matrix<T>::~Matrix()
 	{
-		LOGASSERT(allocations_g >= deletions_g);
+		LOGWEAKASSERT(allocations_g >= deletions_g);
 
 		if (!is_roi_)
 		{
@@ -97,7 +97,7 @@ namespace ion
 	template <class T>
 	ion::Matrix<T>::Matrix(const ion::Matrix<T>& rhs)
 	{
-		LOGASSERT(allocations_g >= deletions_g);
+		LOGWEAKASSERT(allocations_g >= deletions_g);
 
 		LOGASSERT(this != &rhs);
 		allocated_cells_ = rhs.allocated_cells_;
@@ -128,7 +128,7 @@ namespace ion
 	template <class T>
 	ion::Matrix<T> ion::Matrix<T>::operator=(const ion::Matrix<T>& rhs)
 	{
-		LOGASSERT(allocations_g >= deletions_g);
+		LOGWEAKASSERT(allocations_g >= deletions_g);
 
 		LOGASSERT(this != &rhs);
 		//delete *this
@@ -442,7 +442,7 @@ namespace ion
 	void ion::Matrix<T>::Eye()
 	{
 		//this function is ROI-safe
-		//this can only be run on both square matrices
+		//this can only be run on square matrices
 		LOGASSERT(rows_ == cols_ && (pages_ == 1));
 		Zero();
 		for (uint32_t row_index = 0; row_index < rows_; ++row_index)

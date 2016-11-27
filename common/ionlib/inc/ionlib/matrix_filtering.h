@@ -209,11 +209,11 @@ namespace ion
 		uint32_t col_step = (mat.cols_ == 1) ? (1) : (pool_size);
 		uint32_t page_step = (mat.pages_ == 1) ? (1) : (pool_size);
 		ion::Matrix<T> result(result_rows, result_cols, result_pages);
-		for (uint32_t row = 0; row < mat.rows_; row += row_step)
+		for (uint32_t row = 0; row < (mat.rows_-row_step+1); row += row_step)
 		{
-			for (uint32_t col = 0; col < mat.cols_; col += col_step)
+			for (uint32_t col = 0; col < (mat.cols_-col_step+1); col += col_step)
 			{
-				for (uint32_t page = 0; page < mat.pages_; page += page_step)
+				for (uint32_t page = 0; page < (mat.pages_-page_step+1); page += page_step)
 				{
 					//create ROI for this macrovoxel
 					ion::Matrix<T> roi = mat.Roi(row, row_step, col, col_step, page, page_step);
@@ -237,7 +237,6 @@ namespace ion
 			ion::Matrix<T> temp(1, mat.cols_);
 			mat.Roi(row,1).Foreach(&ion::Exp, &temp);
 			T sum = temp.Sum();
-			LOGASSERT(sum > static_cast<T>(0));
 			//Calculate softmax
 			ion::Matrix<T> result_roi = result.Roi(row, 1);
 			temp.Foreach(&ion::Divide, sum, &result_roi);

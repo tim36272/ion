@@ -19,6 +19,7 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #include "ionlib\net.h"
 #include <intrin.h>
 #include <stdio.h>
+#include <windows.h>
 namespace ion
 {
 	bool AppInit(const char* log_file_name)
@@ -38,6 +39,7 @@ namespace ion
 	void AppFail(int32_t result)
 	{
 		LOGINFO("Failed with result %d", result);
+		LogFlush();
 		fflush(stdout);
 		fflush(stderr);
 #ifndef NDEBUG
@@ -45,6 +47,20 @@ namespace ion
 #else
 		quit(result);
 #endif
-
+	}
+	void AppWeakFail(int32_t result)
+	{
+		LOGINFO("Failed with result %d", result);
+		fflush(stdout);
+		fflush(stderr);
+		//check if the debugger is present
+		if (IsDebuggerPresent())
+		{
+			__debugbreak();
+		} else
+		{
+			//continue
+			LOGINFO("Program is continuing because the debugger is not attached");
+		}
 	}
 } //namespace ion

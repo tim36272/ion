@@ -382,7 +382,7 @@ namespace ion
 		//this function is inplace safe
 		//this could be done for 3D matrices but I don't support that yet
 		LOGASSERT(pages_ == 1 && result->pages_ == 1);
-		LOGFATAL("No yey implemented");
+		LOGFATAL("No yet implemented");
 	}
 	template <class T>
 	void ion::Matrix<T>::Inverse(ion::Matrix<T>* result )
@@ -411,7 +411,6 @@ namespace ion
 	{
 		T result = std::numeric_limits<T>::lowest();
 		Foreach(&ion::Max, &result);
-		LOGASSERT(!isnan((float)result));
 		return result;
 	}
 	template <class T>
@@ -423,7 +422,6 @@ namespace ion
 	ion::Matrix<T> ion::Matrix<T>::Log() const
 	{
 		ion::Matrix<T> result(rows_, cols_, pages_);
-		LOGASSERT(data_[0] > static_cast<T>(0));
 		Foreach(&ion::Log, &result);
 		return result;
 	}

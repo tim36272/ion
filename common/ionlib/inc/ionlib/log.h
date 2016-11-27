@@ -28,20 +28,34 @@ namespace ion
 	bool LogInit(const char* log_file_name);
 	void LogPrintf(const char* file, uint32_t line, char* format, ...);
 	void LogClose();
+	void LogFlush();
 
 #define LOGDEBUG(...) ion::LogPrintf(__FILE__, __LINE__, "DEBUG: " ## __VA_ARGS__)
 #define LOGINFO(...)  ion::LogPrintf(__FILE__, __LINE__, "INFO: " ## __VA_ARGS__)
 #define LOGWARN(...)  ion::LogPrintf(__FILE__, __LINE__, "WARN: " ## __VA_ARGS__)
 #define LOGERROR(...) ion::LogPrintf(__FILE__, __LINE__, "ERROR: " ## __VA_ARGS__)
+
 #define LOGFATAL(...) {\
 ion::LogPrintf(__FILE__, __LINE__, "FATAL: " ## __VA_ARGS__);\
 ion::AppFail(-1);\
 }
+
+	//Assert that a condition is true and halt the program if not
 #define LOGASSERT(b,...) {\
   if(!(b)) {\
   LOGFATAL("Assertion failed: "#b" INFO: "##__VA_ARGS__);\
   }\
 }
+
+//Assert that a condition is true and print a message, then if the debugger is attached set a breakpoint, otherwise continue running
+#define LOGWEAKASSERT(b,...) {\
+  if(!(b)) {\
+  ion::LogPrintf(__FILE__,__LINE__,"Weak assertion failed: "#b" INFO: "##__VA_ARGS__);\
+  ion::AppWeakFail(-1);\
+  }\
+}
+
+//This is a "true assertion" in the sense that it is a sanity check only, this will/should never happen in reality
 #ifdef ION_NO_SANITY_CHECK
 #define LOGSANITY(...)
 #else

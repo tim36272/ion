@@ -68,4 +68,9 @@ namespace ion
 		fwrite(buffer, 1, num_bytes_written, g_log_file);
 		va_end(args);
 	}
+
+	void LogFlush()
+	{
+		fflush(g_log_file);
+	}
 } //namespace ion
