@@ -21,6 +21,17 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 namespace ion
 {
+	int SelectSocket(SOCKET socket_handle, uint32_t timeout_msec)
+	{
+		fd_set set;
+		FD_ZERO(&set);
+		FD_SET(socket_handle, &set);
+		struct timeval timeout;
+		timeout.tv_sec = timeout_msec / 1000;
+		timeout.tv_usec = (timeout_msec % 1000) * 1000;
+
+		return select((int)(socket_handle + 1), &set, NULL, NULL, &timeout);
+	}
 	ion::Error InitSockets()
 	{
 		//start Windows socket handling and request Winsock Version 2.2
@@ -101,20 +112,118 @@ namespace ion
 		}
 		return ion::Error::Get(ion::Error::SUCCESS);
 	}
-	ion::Error UdpSocket::Recv(char* buf, uint32_t len, IpAddress* src_sddress)
+	ion::Error UdpSocket::Recv(char* buf, uint32_t len, uint32_t timeout_msec, IpAddress* from_sddress, uint16_t* from_port)
 	{
-		sockaddr_in sender;
-		int sender_length = sizeof(sender);
-		int32_t bytes = recvfrom(this->socket_handle_, buf, len, 0, (sockaddr*)&sender, &sender_length);
-		if (bytes == SOCKET_ERROR)
+		int result = SelectSocket(socket_handle_, timeout_msec);
+		if (result == SOCKET_ERROR)
 		{
-			LOGERROR("Failed to receive packet: %d %s", GetLastError(), getLastErrorString());
+			//error occurred
 			return ion::Error::Get(ion::Error::SOCKET);
 		}
-
-		if (src_sddress)
+		if (result == 0)
 		{
-			(*src_sddress) = IpAddress(sender.sin_addr.S_un.S_addr);
+			//timeout occurred
+			return ion::Error::Get(ion::Error::TIMEOUT);
+		} else
+		{
+			sockaddr_in sender;
+			int sender_length = sizeof(sender);
+			int32_t bytes = recvfrom(this->socket_handle_, buf, len, 0, (sockaddr*)&sender, &sender_length);
+			if (bytes == SOCKET_ERROR)
+			{
+				LOGERROR("Failed to receive packet: %d %s", GetLastError(), getLastErrorString());
+				return ion::Error::Get(ion::Error::SOCKET);
+			}
+
+			if (from_sddress)
+			{
+				from_sddress->from_integer(sender.sin_addr.S_un.S_addr);
+			}
+			if (from_port)
+			{
+				*from_port = sender.sin_port;
+			}
+			return ion::Error::Get(ion::Error::SUCCESS);
+		}
+	}
+
+	ion::TcpSocket::TcpSocket()
+	{
+		this->socket_handle_ = INVALID_SOCKET;
+	}
+	ion::Error ion::TcpSocket::Create(uint16_t port, ion::IpAddress addr)
+	{
+
+		sockaddr_.sin_family = AF_INET;
+		ion::byteswap((uint8_t*)&port, sizeof(port));
+		sockaddr_.sin_port = port;
+		sockaddr_.sin_addr.s_addr = addr.as_integer();
+
+		socket_handle_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		LOGASSERT(socket_handle_ != INVALID_SOCKET);
+		ion::Error ionresult;
+		return ionresult;
+	}
+	ion::Error ion::TcpSocket::Connect()
+	{
+		LOGASSERT(socket_handle_ != INVALID_SOCKET);
+		int result = connect(socket_handle_, (SOCKADDR*)&sockaddr_, sizeof(sockaddr_));
+		LOGASSERT(result != SOCKET_ERROR);
+		ion::Error ionresult;
+		return ionresult;
+	}
+	ion::Error ion::TcpSocket::Listen()
+	{
+		int result = bind(socket_handle_, (LPSOCKADDR)&sockaddr_, sizeof(sockaddr));
+		LOGASSERT(result != SOCKET_ERROR);
+		listen(socket_handle_, SOMAXCONN);
+		ion::Error ionresult;
+		return ionresult;
+	}
+	void ion::TcpSocket::Close()
+	{
+		LOGASSERT(socket_handle_ != INVALID_SOCKET);
+		closesocket(socket_handle_);
+	}
+	ion::Error ion::TcpSocket::Send(const char* buf, uint32_t len)
+	{
+		int result;
+		result = send(socket_handle_, buf, (int32_t)len, 0);
+		if (result != SOCKET_ERROR)
+		{
+			return ion::Error::Get(ion::Error::SUCCESS);
+		} else
+		{
+			return ion::Error::Get(ion::Error::SOCKET);
+		}
+	}
+	ion::Error ion::TcpSocket::Recv(char* buf, uint32_t buf_len, uint32_t timeout_msec, IpAddress* from_address, uint16_t* from_port, size_t* bytes_read)
+	{
+		int result = SelectSocket(socket_handle_, timeout_msec);
+
+		if (result == SOCKET_ERROR)
+		{
+			//error occurred
+			return ion::Error::Get(ion::Error::SOCKET);
+		}
+		if (result == 0)
+		{
+			//timeout occurred
+			return ion::Error::Get(ion::Error::TIMEOUT);
+		} else
+		{
+			//data is available
+			sockaddr_in from;
+			int from_size = (int)sizeof(from);
+			*bytes_read = recvfrom(socket_handle_, buf, buf_len, 0, (sockaddr*)&from, &from_size);
+			if (from_address)
+			{
+				from_address->from_integer(from.sin_addr.S_un.S_addr);
+			}
+			if (from_port)
+			{
+				*from_port = from.sin_port;
+			}
 		}
 		return ion::Error::Get(ion::Error::SUCCESS);
 	}

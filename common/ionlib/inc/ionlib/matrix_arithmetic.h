@@ -35,6 +35,25 @@ namespace ion
 		}
 		return sum;
 	}
+	ion::Matrix<float> ion::Matrix<float>::Abs() const
+	{
+		ion::Matrix<float> result(rows_, cols_, pages_);
+		Foreach(&std::fabsf, &result);
+		return result;
+	}
+	ion::Matrix<double> ion::Matrix<double>::Abs() const
+	{
+		ion::Matrix<double> result(rows_, cols_, pages_);
+		Foreach(&std::fabs, &result);
+		return result;
+	}
+	template <class T>
+	ion::Matrix<T> ion::Matrix<T>::Abs() const
+	{
+		ion::Matrix<T> result(rows_, cols_, pages_);
+		LOGFATAL("Not implemented")
+		return result;
+	}
 	template <class T>
 	ion::Matrix<T> ion::Matrix<T>::SumRows() const
 	{
@@ -422,7 +441,7 @@ namespace ion
 	ion::Matrix<T> ion::Matrix<T>::Log() const
 	{
 		ion::Matrix<T> result(rows_, cols_, pages_);
-		Foreach(&ion::Log, &result);
+		Foreach(&ion::LogPerturb, &result);
 		return result;
 	}
 	//computes argmax by flattening the array first

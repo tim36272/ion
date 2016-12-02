@@ -23,5 +23,6 @@ namespace ion
 	void AppClose();
 	void AppFail(int32_t result);
 	void AppWeakFail(int32_t result);//only fail if the debugger is attached
+	void AppSetStrictFloatingPointRules(void);
 } //namespace ion
 #endif //IONAPPUTIL_H_

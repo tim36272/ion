@@ -19,6 +19,7 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #include <WinSock2.h>
 #include "ionlib\ip_address.h"
 #include "ionlib\error.h"
+#include "ionlib\byteswap.h"
 namespace ion
 {
 	ion::Error InitSockets();
@@ -31,8 +32,22 @@ namespace ion
 		void Close();
 		ion::Error Bind(uint16_t port);
 		ion::Error SendTo(const char* buf, uint32_t len, IpAddress address, uint16_t port);
-		ion::Error Recv(char* buf, uint32_t len, IpAddress* src_sddress);
+		ion::Error Recv(char* buf, uint32_t len, uint32_t timeout_msec, IpAddress* from_sddress, uint16_t* from_port);
 	private:
+		SOCKET socket_handle_;
+	};
+	class TcpSocket
+	{
+	public:
+		TcpSocket();
+		ion::Error Create(uint16_t port, ion::IpAddress addr);
+		ion::Error Connect();
+		ion::Error Listen();
+		void Close();
+		ion::Error Send(const char* buf, uint32_t len);
+		ion::Error Recv(char* buf, uint32_t buf_len, uint32_t timeout_msec, IpAddress* from_address, uint16_t* from_port, size_t* bytes_read);
+	private:
+		SOCKADDR_IN sockaddr_;
 		SOCKET socket_handle_;
 	};
 } //namespace ion

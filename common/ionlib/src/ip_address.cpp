@@ -45,4 +45,17 @@ namespace ion
 
 		return inet_ntop(AF_INET, &address_helper, this->address_string_, sizeof(this->address_string_));
 	}
+	void IpAddress::from_integer(uint32_t ip_address)
+	{
+		this->address_ = ip_address;
+	}
+	void IpAddress::from_string(const char* ip_address)
+	{
+		int result = inet_pton(AF_INET, ip_address, &this->address_);
+		if (result != 1)
+		{
+			LOGERROR("Unable to initialize ip address from string %s", ip_address);
+			this->address_ = INADDR_NONE;
+		}
+	}
 }

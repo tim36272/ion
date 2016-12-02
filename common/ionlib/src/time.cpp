@@ -48,11 +48,11 @@ namespace ion
 	double TimeGetEpoch()
 	{
 		FILETIME time;
-#if NTDDI_VERSION < NTDDI_WIN8 
+//#if NTDDI_VERSION < NTDDI_WIN8 
 		GetSystemTimeAsFileTime(&time);
-#else
-		GetSystemTimePreciseAsFileTime(&time);
-#endif
+//#else
+//		GetSystemTimePreciseAsFileTime(&time);
+//#endif
 		static const uint64_t EPOCH_DIFFERENCE_TENTH_MICROS = 116444736000000000ull;
 		// First convert 100-ns intervals to microseconds, then adjust for the
 		// epoch difference

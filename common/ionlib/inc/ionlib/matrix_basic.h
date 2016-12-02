@@ -22,12 +22,12 @@ namespace ion
 	static uint64_t deletions_g = 0;
 	uint64_t GetMatrixAllocations()
 	{
-		LOGWEAKASSERT(allocations_g >= deletions_g);
+		LOGWEAKASSERT(allocations_g >= deletions_g, "Allocations: %llu, Deletions: %llu", allocations_g, deletions_g);
 		return allocations_g;
 	}
 	uint64_t GetMatrixDeletions()
 	{
-		LOGWEAKASSERT(allocations_g >= deletions_g);
+		LOGWEAKASSERT(allocations_g >= deletions_g, "Allocations: %llu, Deletions: %llu", allocations_g, deletions_g);
 		return deletions_g;
 	}
 
@@ -54,9 +54,8 @@ namespace ion
 	//	format_ = FMT_ASCII;
 	//}
 	template <class T>
-	ion::Matrix<T>::Matrix(uint32_t rows, uint32_t cols = 1, uint32_t pages = 1)
+	void ion::Matrix<T>::Construct(uint32_t rows, uint32_t cols, uint32_t pages)
 	{
-		LOGWEAKASSERT(allocations_g >= deletions_g);
 
 		//consider checking here if rows*cols*pages fits in a 64 bit integer
 		allocated_cells_ = (uint64_t)rows * (uint64_t)cols * (uint64_t)pages;
@@ -82,22 +81,27 @@ namespace ion
 		contiguous_ = true;
 		is_roi_ = false;
 		format_ = FMT_ASCII;
+		LOGWEAKASSERT(allocations_g >= deletions_g, "Allocations: %llu, Deletions: %llu", allocations_g, deletions_g);
+	}
+	template <class T>
+	ion::Matrix<T>::Matrix(uint32_t rows, uint32_t cols = 1, uint32_t pages = 1)
+	{
+		Construct(rows, cols, pages);
 	}
 	template <class T>
 	ion::Matrix<T>::~Matrix()
 	{
-		LOGWEAKASSERT(allocations_g >= deletions_g);
 
 		if (!is_roi_)
 		{
 			delete[] data_;
 			deletions_g++;
 		}
+		LOGWEAKASSERT(allocations_g >= deletions_g, "Allocations: %llu, Deletions: %llu", allocations_g, deletions_g);
 	}
 	template <class T>
 	ion::Matrix<T>::Matrix(const ion::Matrix<T>& rhs)
 	{
-		LOGWEAKASSERT(allocations_g >= deletions_g);
 
 		LOGASSERT(this != &rhs);
 		allocated_cells_ = rhs.allocated_cells_;
@@ -124,11 +128,11 @@ namespace ion
 		contiguous_ = rhs.contiguous_;
 		is_roi_ = rhs.is_roi_;
 		format_ = rhs.format_;
+		LOGWEAKASSERT(allocations_g >= deletions_g, "Allocations: %llu, Deletions: %llu", allocations_g, deletions_g);
 	}
 	template <class T>
 	ion::Matrix<T> ion::Matrix<T>::operator=(const ion::Matrix<T>& rhs)
 	{
-		LOGWEAKASSERT(allocations_g >= deletions_g);
 
 		LOGASSERT(this != &rhs);
 		//delete *this
@@ -162,6 +166,7 @@ namespace ion
 		contiguous_ = rhs.contiguous_;
 		is_roi_ = rhs.is_roi_;
 		format_ = rhs.format_;
+		LOGWEAKASSERT(allocations_g >= deletions_g, "Allocations: %llu, Deletions: %llu", allocations_g, deletions_g);
 		return *this;
 	}
 	//////////////////////////////////////////////////// Elementry Operations
@@ -173,11 +178,17 @@ namespace ion
 		uint64_t new_size = (uint64_t)rows * (uint64_t)cols * (uint64_t)pages;
 		if (new_size > allocated_cells_)
 		{
-			LOGWARN("The requested matrix size %ull is greater than the allocated size %ull. The matrix will be re-allocated but this can lead to severe performance penalties");
-			delete data_;
-			allocated_cells_ = new_size;
-			data_ = new (std::nothrow) T[allocated_cells_];
+			//LOGWARN("The requested matrix size %llu is greater than the allocated size %llu. The matrix will be re-allocated but this can lead to severe performance penalties", new_size, allocated_cells_);
+			T* old_data = data_;
+			data_ = new T[new_size];
 			LOGASSERT(data_ != NULL);
+			memcpy(data_, old_data, allocated_cells_);
+			allocated_cells_ = new_size;
+			delete old_data;
+			contiguous_ = true;
+			allocated_rows_ = rows;
+			allocated_cols_ = cols;
+			allocated_pages_ = pages;
 		}
 		rows_ = rows;
 		cols_ = cols;
@@ -734,7 +745,6 @@ namespace ion
 			LOGASSERT(row_index < rows_);
 			LOGASSERT(col_index < cols_);
 			result.At(index) = At(row_index,col_index);
-			LOGASSERT(result.At(index) > static_cast<T>(0));
 		}
 		return result;
 	}
@@ -747,7 +757,7 @@ namespace ion
 			{
 				for (uint32_t page = 0; page < pages_; ++page)
 				{
-					LOGASSERT(!isnan((double)At(row, col, page)));
+					LOGASSERT(!isnan((double)At(row, col, page)), "(%u,%u,%u)",row,col,page);
 				}
 			}
 		}

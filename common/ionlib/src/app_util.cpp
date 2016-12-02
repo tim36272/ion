@@ -63,4 +63,10 @@ namespace ion
 			LOGINFO("Program is continuing because the debugger is not attached");
 		}
 	}
+	void AppSetStrictFloatingPointRules(void)
+	{
+		unsigned int fp_control_state;
+		(void)_controlfp_s(&fp_control_state, 0, 0);
+		(void)_controlfp_s(&fp_control_state, _EM_INEXACT | _EM_UNDERFLOW, _MCW_EM);
+	}
 } //namespace ion

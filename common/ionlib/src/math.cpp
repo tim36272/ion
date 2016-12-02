@@ -16,16 +16,39 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
 #include <random>
 #include "ionlib/math.h"
+#include "ionlib/log.h"
 namespace ion
 {
 	double randlf(double low, double high)
 	{
-		return ((double)std::rand() / (double)RAND_MAX)*(high - low) + low;
+		double val = ((double)std::rand() / (double)RAND_MAX)*(high - low) + low;
+		LOGSANITY(low <= val && val <= high);
+		return val;
 	}
+	//returns a value in the range [low,high].
 	size_t randull(size_t low, size_t high)
 	{
-		return llround(((double)std::rand() / (double)RAND_MAX)*(high - low) + low);
+		size_t val = (size_t)(((double)std::rand() / (double)(RAND_MAX+1))*((high+1) - low) + low);
+		LOGSANITY(low <= val && val <= high);
+		return val;
 	}
+	//uint32_t randul(uint32_t low, uint32_t high)
+	//{
+	//	uint32_t val;
+	//	uint16_t* upper = (uint16_t*)val;
+	//	uint16_t* lower = ((uint16_t*)val) + 1;
+	//	*upper = std::rand();
+	//	*lower = std::rand();
+	//	(size_t)(((float)std::rand() / (float)(RAND_MAX + 1))*((high + 1) - low) + low);
+	//	LOGSANITY(low <= val && val <= high);
+	//	return val;
+	//}
+	//uint16_t randus(uint16_t low, uint16_t high)
+	//{
+	//	size_t val = (size_t)(((double)std::rand() / (double)(RAND_MAX + 1))*((high + 1) - low) + low);
+	//	LOGSANITY(low <= val && val <= high);
+	//	return val;
+	//}
 
 	double random_normal_distribution(double mean, double std)
 	{

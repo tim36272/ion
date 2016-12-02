@@ -35,13 +35,19 @@ namespace ion
 			TIMEOUT,
 			ABANDONED
 		};
-		Error() = delete;
+		Error() : Error(ion::Error::Get(ion::Error::SUCCESS))
+		{
+		}
 		Error(Error::status_t id, std::string explanation);
 		static Error Get(Error::status_t status);
+		
 		bool operator==(const ion::Error& rhs) const;
 		bool operator <(const ion::Error& rhs) const;
+		bool success()
+		{
+			return id_ == SUCCESS;
+		}
 	private:
-		//This consturctor is private because no one should be allowed to construct an invalid (incomplete) error except the library
 		Error(Error::status_t id);
 		Error::status_t id_;
 		std::string explanation_;

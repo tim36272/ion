@@ -27,6 +27,8 @@ namespace ion
 		IpAddress(uint32_t ip_address);
 		uint32_t as_integer(); //returns in network byte order
 		const char* as_string();
+		void from_integer(uint32_t ip_address);
+		void from_string(const char* ip_address);
 	private:
 		uint32_t address_;
 		char address_string_[16];

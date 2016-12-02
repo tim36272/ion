@@ -71,13 +71,26 @@ namespace ion
 	template <class T>
 	inline T Exp(T in)
 	{
-		return static_cast<T>(exp(static_cast<double>(in)));
+		return static_cast<T>(expf(static_cast<float>(in)));
 	}
 	template <class T>
 	inline T Log(T in)
 	{
 		LOGASSERT(in > static_cast<T>(0));
-		return static_cast<T>(log(static_cast<double>(in)));
+		return static_cast<T>(logf(static_cast<float>(in)));
+	}
+	template <class T>
+	inline T LogPerturb(T in)
+	{
+		if (in > static_cast<T>(0))
+		{
+			return static_cast<T>(logf(static_cast<float>(in)));
+		} else if (in == static_cast<T>(0))
+		{
+			return static_cast<T>(logf(0.00000000001f));
+		}
+		LOGFATAL("Cannot take the log of a negative number %f", in);
+		return static_cast<T>(0);
 	}
 	//returns 0 for false and 1 for true (ion::Matrix::operator== depends on this behavior)
 	template <class T>
@@ -89,13 +102,25 @@ namespace ion
 	template <class T>
 	inline T derivative_tanh(T in)
 	{
-		double temp = std::tanh(static_cast<double>(in);
+		float temp = std::tanhf(static_cast<float>(in);
 		return static_cast<T>(1.0 - temp*temp));
 	}
 	template <class T>
 	inline bool Equal(T lhs, T rhs)
 	{
 		return lhs == rhs;
+	}
+	template <class T>
+	inline T clamp(T val, T min, T max)
+	{
+		if (val < min)
+		{
+			return min;
+		} else if (val > max)
+		{
+			return max;
+		}
+		return val;
 	}
 };
 #endif //ION_MATH_H_
