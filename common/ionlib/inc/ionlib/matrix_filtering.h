@@ -207,19 +207,24 @@ namespace ion
 		uint32_t result_pages = ion::Max(1U, mat.pages_ / pool_size);
 		
 		//handle smaller than 3D mats:
-		uint32_t row_step = (mat.rows_ == 1) ? (1) : (pool_size);
-		uint32_t col_step = (mat.cols_ == 1) ? (1) : (pool_size);
-		uint32_t page_step = (mat.pages_ == 1) ? (1) : (pool_size);
+		const uint32_t row_step = (mat.rows_ == 1) ? (1) : (pool_size);
+		const uint32_t col_step = (mat.cols_ == 1) ? (1) : (pool_size);
+		const uint32_t page_step = (mat.pages_ == 1) ? (1) : (pool_size);
 		ion::Matrix<T> result(result_rows, result_cols, result_pages);
-		for (uint32_t row = 0; row < (mat.rows_-row_step+1); row += row_step)
+		Matrix<T> roi = mat.Roi(0, 0,0);
+		const uint32_t row_max = (mat.rows_ - row_step + 1);
+		const uint32_t col_max = (mat.cols_ - col_step + 1);
+		const uint32_t page_max = (mat.pages_ - page_step + 1);
+		for (uint32_t row = 0; row < row_max; row += row_step)
 		{
-			for (uint32_t col = 0; col < (mat.cols_-col_step+1); col += col_step)
+			for (uint32_t col = 0; col < col_max; col += col_step)
 			{
-				for (uint32_t page = 0; page < (mat.pages_-page_step+1); page += page_step)
+				for (uint32_t page = 0; page < page_max; page += page_step)
 				{
 					//create ROI for this macrovoxel
-					ion::Matrix<T> roi = mat.Roi(row, row_step, col, col_step, page, page_step);
-					result.At(row / pool_size, col / pool_size, page / pool_size) = roi.Max();
+					mat.Roi_Fast(row, row_step, col, col_step, page, page_step, &roi);
+					//this doesn't use ion::Matrix::At for performance reasons
+					result.data_[MAT_INDEX(result,row / pool_size, col / pool_size, page / pool_size)] = roi.Max();
 				}
 			}
 		}

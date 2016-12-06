@@ -79,6 +79,10 @@ namespace ion
 		{
 			return std::strtoull(Find(keyname)->second, NULL, 10);
 		}
+		bool Getbool(const char* keyname)
+		{
+			return (Getb(keyname) != 0);
+		}
 		const char* Getc(const char* keyname)
 		{
 			return Find(keyname)->second;

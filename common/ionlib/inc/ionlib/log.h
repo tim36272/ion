@@ -18,6 +18,7 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #define ION_LOG_H_
 #include <stdint.h>
 #include <stdlib.h>
+#include <fstream>
 #include "app_util.h"
 
 #define IONLOG_MAX_MESSAGE_LENGTH 512
@@ -65,6 +66,17 @@ ion::AppFail(-1);\
   }\
 }
 #endif
-
+	extern std::ofstream g_log_file;
+	struct Logger
+	{
+		template<typename T>
+		Logger& operator <<(const T& rhs)
+		{
+			std::cout << rhs;
+			g_log_file << rhs;
+			return *this;
+		}
+	};
+	extern Logger logout;
 } //namespace ion
 #endif //IONLOG_H_

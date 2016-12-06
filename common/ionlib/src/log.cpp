@@ -23,12 +23,13 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 
 namespace ion
 {
-	FILE* g_log_file = NULL;
+	Logger logout;
+	std::ofstream g_log_file;
 
 	bool LogInit(const char* log_file_name)
 	{
-		errno_t result = fopen_s(&g_log_file, log_file_name, "w");
-		if (result != 0 || g_log_file == NULL)
+		g_log_file.open(log_file_name);
+		if (!g_log_file.good())
 		{
 			//bypass the normal logger and just printf since logging isn't initialized yet
 			printf("Failed to open log file %s", log_file_name);
@@ -41,9 +42,9 @@ namespace ion
 	}
 	void LogClose()
 	{
-		if (g_log_file != NULL)
+		if (g_log_file.is_open())
 		{
-			fclose(g_log_file);
+			g_log_file.close();
 		}
 	}
 	void LogPrintf(const char* file, uint32_t line, char* format, ...)
@@ -65,12 +66,12 @@ namespace ion
 		num_bytes_written += vsnprintf(buffer + num_bytes_written, IONLOG_MAX_MESSAGE_LENGTH - num_bytes_written, format, args);
 		num_bytes_written += snprintf(buffer + num_bytes_written, IONLOG_MAX_MESSAGE_LENGTH - num_bytes_written, "\r\n");
 		printf(buffer);
-		fwrite(buffer, 1, num_bytes_written, g_log_file);
+		g_log_file << buffer;
 		va_end(args);
 	}
 
 	void LogFlush()
 	{
-		fflush(g_log_file);
+		g_log_file.flush();
 	}
 } //namespace ion

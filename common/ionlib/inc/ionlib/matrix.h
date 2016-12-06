@@ -170,6 +170,7 @@ namespace ion
 		friend ion::Matrix<U> Softmax(const ion::Matrix<U>& mat);
 		Matrix ResampleBilerp(uint32_t new_rows, uint32_t new_cols = 0, uint32_t new_pages = 0);
 
+		uint64_t user_id; //user can use this for whatever they want
 	private:
 		void Construct(uint32_t rows, uint32_t cols, uint32_t pages);
 		Matrix() = delete; //default construction is only allowed by the library so this is private

@@ -20,7 +20,9 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #include <chrono>
 #include <condition_variable>
 #include "ionlib/error.h"
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 namespace ion
 {
 	template <class T>

@@ -81,6 +81,7 @@ namespace ion
 		contiguous_ = true;
 		is_roi_ = false;
 		format_ = FMT_ASCII;
+		user_id = 0ULL;
 		LOGWEAKASSERT(allocations_g >= deletions_g, "Allocations: %llu, Deletions: %llu", allocations_g, deletions_g);
 	}
 	template <class T>
@@ -128,6 +129,7 @@ namespace ion
 		contiguous_ = rhs.contiguous_;
 		is_roi_ = rhs.is_roi_;
 		format_ = rhs.format_;
+		user_id = rhs.user_id;
 		LOGWEAKASSERT(allocations_g >= deletions_g, "Allocations: %llu, Deletions: %llu", allocations_g, deletions_g);
 	}
 	template <class T>
@@ -166,6 +168,7 @@ namespace ion
 		contiguous_ = rhs.contiguous_;
 		is_roi_ = rhs.is_roi_;
 		format_ = rhs.format_;
+		user_id = rhs.user_id;
 		LOGWEAKASSERT(allocations_g >= deletions_g, "Allocations: %llu, Deletions: %llu", allocations_g, deletions_g);
 		return *this;
 	}
@@ -198,6 +201,7 @@ namespace ion
 	ion::Matrix<T> ion::Matrix<T>::DeepCopy() const
 	{
 		ion::Matrix<T> rhs(rows_, cols_, pages_);
+		rhs.user_id = user_id;
 		//this function is ROI-safe
 		//if the input is an ROI, the result will be deep coppied into the parent's data (i.e. it is still an ROI)
 		if (contiguous_ && rhs.contiguous_)
@@ -247,6 +251,7 @@ namespace ion
 		LOGASSERT(rows_ == rhs.rows_);
 		LOGASSERT(cols_ == rhs.cols_);
 		LOGASSERT(pages_ == rhs.pages_);
+		rhs.user_id = user_id;
 		//this function is ROI-safe
 		//if the input is an ROI, the result will be deep coppied into the parent's data (i.e. it is still an ROI)
 		if (contiguous_ && rhs.contiguous_)
@@ -562,7 +567,7 @@ namespace ion
 		result.allocated_pages_ = allocated_pages_;
 		result.format_ = format_;
 		result.contiguous_ = IsContiguous();
-
+		result.user_id = user_id;
 		return result;
 	}
 	template <class T>
@@ -610,6 +615,7 @@ namespace ion
 		reused_roi->allocated_pages_ = allocated_pages_;
 		reused_roi->format_ = format_;
 		reused_roi->contiguous_ = IsContiguous();
+		reused_roi->user_id = user_id;
 	}
 	template <class T>
 	uint32_t ion::Matrix<T>::rows() const
@@ -738,6 +744,7 @@ namespace ion
 		LOGASSERT(row_indices.cols() == 1 && row_indices.pages() == 1);
 		LOGASSERT(col_indices.cols() == 1 && col_indices.pages() == 1);
 		ion::Matrix<T> result(row_indices.rows());
+		result.user_id = user_id;
 		for (uint32_t index = 0; index < result.rows_; ++index)
 		{
 			uint32_t row_index = row_indices.At(index);
