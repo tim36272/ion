@@ -178,7 +178,7 @@ namespace ion
 	{
 		//it doesn't make sense to resize an ROI (just get a new one)
 		LOGASSERT(!is_roi_);
-		uint64_t new_size = (uint64_t)rows * (uint64_t)cols * (uint64_t)pages;
+		size_t new_size = (size_t)rows * (size_t)cols * (size_t)pages;
 		if (new_size > allocated_cells_)
 		{
 			//LOGWARN("The requested matrix size %llu is greater than the allocated size %llu. The matrix will be re-allocated but this can lead to severe performance penalties", new_size, allocated_cells_);
@@ -237,7 +237,8 @@ namespace ion
 					{
 						for (uint32_t page_index = 0; page_index < pages_; ++page_index)
 						{
-							rhs.At(row_index, col_index, page_index) = At(row_index, col_index, page_index);
+							//this doesn't use ion::Matrix::At for performance reasons
+							rhs.data_[MAT_INDEX(rhs,row_index, col_index, page_index)] = data_[MAT_INDEX(*this,row_index, col_index, page_index)];
 						}
 					}
 				}
@@ -571,26 +572,14 @@ namespace ion
 		return result;
 	}
 	template <class T>
-	void ion::Matrix<T>::Roi_Fast(uint32_t row_start, int64_t num_rows, uint32_t col_start, int64_t num_cols, uint32_t page_start, int64_t num_pages, ion::Matrix<T>* reused_roi) const
+	inline void ion::Matrix<T>::Roi_Fast(uint32_t row_start, int64_t num_rows, uint32_t col_start, int64_t num_cols, uint32_t page_start, int64_t num_pages, ion::Matrix<T>* reused_roi) const
 	{
 		//this function is ROI-safe
-		//If you give this function 0 for num_* it will interpret that as "the rest of them"
-		//if you give this function negative values for num_* it is interpret that as "the rest of them minus abs(num_*)"
-		if (num_rows <= 0)
-		{
-			num_rows = rows_ - row_start + num_rows;
-		}
-		if (num_cols <= 0)
-		{
-			num_cols = cols_ - col_start + num_cols;
-		}
-		if (num_pages <= 0)
-		{
-			num_pages = pages_ - page_start + num_pages;
-		}
-		LOGASSERT(row_start + num_rows <= allocated_rows_);
-		LOGASSERT(col_start + num_cols <= allocated_cols_);
-		LOGASSERT(page_start + num_pages <= allocated_pages_);
+		//this uses LOGSANITY instead of LOGASSERT for speed
+		LOGSANITY(row_start + num_rows <= allocated_rows_);
+		LOGSANITY(col_start + num_cols <= allocated_cols_);
+		LOGSANITY(page_start + num_pages <= allocated_pages_);
+#ifndef ION_NO_SANITY_CHECK
 		//Don't allow creating an ROI which extends outside the original ROI
 		if (is_roi_)
 		{
@@ -600,6 +589,7 @@ namespace ion
 				LOGFATAL("Creating an ROI from an ROI, and the new ROI extends past the original ROI. Original ROI has size (%u,%u,%u). New ROI starts at (%u,%u,%u) and has size (%u,%u,%u)", rows_, cols_, pages_, row_start, col_start, page_start, num_rows, num_cols, num_pages);
 			}
 		}
+#endif
 
 		reused_roi->is_roi_ = true;
 		reused_roi->data_ = data_;
@@ -614,8 +604,20 @@ namespace ion
 		reused_roi->allocated_cols_ = allocated_cols_;
 		reused_roi->allocated_pages_ = allocated_pages_;
 		reused_roi->format_ = format_;
-		reused_roi->contiguous_ = IsContiguous();
+		reused_roi->contiguous_ = reused_roi->IsContiguous();
 		reused_roi->user_id = user_id;
+	}
+	template <class T>
+	inline void ion::Matrix<T>::Roi_ReallyFast(uint32_t row_start, int64_t num_rows, uint32_t col_start, int64_t num_cols, uint32_t page_start, int64_t num_pages, ion::Matrix<T>* reused_roi) const
+	{
+		reused_roi->data_ = data_;
+		reused_roi->rows_ = (uint32_t)num_rows;
+		reused_roi->cols_ = (uint32_t)num_cols;
+		reused_roi->pages_ = (uint32_t)num_pages;
+		reused_roi->roi_row_origin_ = row_start + roi_row_origin_;
+		reused_roi->roi_col_origin_ = col_start + roi_col_origin_;
+		reused_roi->roi_page_origin_ = page_start + roi_page_origin_;
+		reused_roi->contiguous_ = false; //this is the safest option. Typically this function is used in cases where you don't care anyway
 	}
 	template <class T>
 	uint32_t ion::Matrix<T>::rows() const
@@ -719,7 +721,7 @@ namespace ion
 		return result;
 	}
 	template <class T>
-	uint64_t ion::Matrix<T>::NumCells() const
+	size_t ion::Matrix<T>::NumCells() const
 	{
 		return rows_ * cols_ * pages_;
 	}

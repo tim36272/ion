@@ -16,6 +16,7 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
 #include "ionlib/matrix.h"
 #include "ionlib/math.h"
+#include <smmintrin.h>
 namespace ion
 {
 	template <class T>
@@ -188,7 +189,7 @@ namespace ion
 				for (uint32_t page = 0; page < pages_; ++page)
 				{
 					this_idx = MAT_INDEX(*this, row, col, page);
-					multiplier_idx = MAT_INDEX(multiplier, rows_-row-1, cols_-col-1, pages_-page-1);
+					multiplier_idx = MAT_INDEX(multiplier, rows_ - row - 1, cols_ - col - 1, pages_ - page - 1);
 					result_idx = MAT_INDEX(*result, row, col, page);
 					//this does not use ion::Matrix::At for performance reasons
 					result->data_[result_idx] = data_[this_idx] * multiplier.data_[multiplier_idx];
@@ -196,7 +197,121 @@ namespace ion
 			}
 		}
 	}
-
+	template <class T>
+	inline T ion::Matrix<T>::ElementwiseMultiplyRotatedWithSumFast(const Matrix<T>& multiplier) const
+	{
+		//matrices must be the same shape
+		//This function is ROI-safe
+		//This uses LOGSANITY instead of LOGASSERT because -Fast functions are not allowed to do bounds checking in release mode
+		LOGSANITY(rows_ == multiplier.rows_);
+		LOGSANITY(cols_ == multiplier.cols_);
+		LOGSANITY(pages_ == multiplier.pages_);
+		size_t this_idx, multiplier_idx;
+		//This does not use Foreach for performance reasons
+		T sum = static_cast<T>(0);
+		for (uint32_t row = 0; row < rows_; ++row)
+		{
+			for (uint32_t col = 0; col < cols_; ++col)
+			{
+				for (uint32_t page = 0; page < pages_; ++page)
+				{
+					this_idx = MAT_INDEX(*this, row, col, page);
+					multiplier_idx = MAT_INDEX(multiplier, row, col, page);
+					//this does not use ion::Matrix::At for performance reasons
+					sum += data_[this_idx] * multiplier.data_[multiplier_idx];
+				}
+			}
+		}
+		return sum;
+	}
+	template <class T>
+	inline T ion::Matrix<T>::ElementwiseMultiplyRotatedWithSumFast2D(const Matrix<T>& multiplier) const
+	{
+		//matrices must be the same shape
+		//This function is ROI-safe
+		//This uses LOGSANITY instead of LOGASSERT because -Fast functions are not allowed to do bounds checking in release mode
+		LOGSANITY(rows_ == multiplier.rows_);
+		LOGSANITY(cols_ == multiplier.cols_);
+		LOGSANITY(pages_ == multiplier.pages_ && pages_ == 1 && allocated_pages_ == 1);
+		size_t this_idx, multiplier_idx;
+		//This does not use Foreach for performance reasons
+		T sum = static_cast<T>(0);
+		for (uint32_t row = 0; row < rows_; ++row)
+		{
+			this_idx = MAT_INDEX(*this, row, 0, 0);
+			multiplier_idx = MAT_INDEX(multiplier, row, 0, 0);
+			for (uint32_t col = 0; col < cols_; ++col)
+			{
+				//this does not use ion::Matrix::At for performance reasons
+				sum += data_[this_idx+col] * multiplier.data_[multiplier_idx+col];
+			}
+		}
+		return sum;
+	}
+	template <class T>
+	T ion::Matrix<T>::ElementwiseMultiplyRotatedWithSumFastSSE3x3(const ion::Matrix<T>& multiplier)
+	{
+		LOGFATAL("Not implemented %u", multiplier.user_id);
+		return static_cast<T>(0);
+	}
+	float ion::Matrix<float>::ElementwiseMultiplyRotatedWithSumFastSSE3x3(const Matrix<float>& multiplier)
+	{
+		//matrices must be the same shape
+		//This function is ROI-safe
+		//This uses LOGSANITY instead of LOGASSERT because -Fast functions are not allowed to do bounds checking in release mode
+		LOGSANITY(rows_ == multiplier.rows_ && rows_ == 3);
+		LOGSANITY(cols_ == multiplier.cols_ && cols_ == 3);
+		LOGSANITY(pages_ == multiplier.pages_ && pages_ == 1); //I haven't yet figured out how to do this on 3D data with SSE
+		size_t multiplicand_idx, multiplier_idx;
+		//This does not use Foreach for performance reasons
+		float sum = 0.0f;
+		for (uint32_t row = 0; row < rows_; ++row)
+		{
+			multiplicand_idx = MAT_INDEX(*this, row, 0, 0);
+			multiplier_idx = MAT_INDEX(multiplier, rows_ - row - 1, 0, 0);
+			__m128* sse_multiplier = (__m128*)&multiplier.data_[multiplier_idx];
+			__m128* sse_multiplicand = (__m128*)&data_[multiplicand_idx];
+			//memcpy(sse_multiplier.m128_f32, &data_[multiplicand_idx], 3 * sizeof(float));
+			//sse_multiplicand.m128_f32[2] = multiplier.data_[multiplier_idx];
+			//sse_multiplicand.m128_f32[1] = multiplier.data_[multiplier_idx + 1];
+			//sse_multiplicand.m128_f32[0] = multiplier.data_[multiplier_idx + 2];
+			__m128 res = _mm_dp_ps(*sse_multiplier, *sse_multiplicand, 0x71);
+			sum += res.m128_f32[0];
+		}
+		return sum;
+	}
+	template <class T>
+	T ion::Matrix<T>::ElementwiseMultiplyRotatedWithSumFastSSE5x5(const ion::Matrix<T>& multiplier)
+	{
+		LOGFATAL("Not implemented %u", multiplier.user_id);
+		return static_cast<T>(0);
+	}
+	float ion::Matrix<float>::ElementwiseMultiplyRotatedWithSumFastSSE5x5(const Matrix<float>& multiplier)
+	{
+		//matrices must be the same shape
+		//This function is ROI-safe
+		//This uses LOGSANITY instead of LOGASSERT because -Fast functions are not allowed to do bounds checking in release mode
+		LOGSANITY(rows_ == multiplier.rows_ && rows_ == 5);
+		LOGSANITY(cols_ == multiplier.cols_ && cols_ == 5);
+		LOGSANITY(pages_ == multiplier.pages_ && pages_ == 1); //I haven't yet figured out how to do this on 3D data with SSE
+		size_t multiplicand_idx, multiplier_idx;
+		//This does not use Foreach for performance reasons
+		float sum = 0.0f;
+		for (uint32_t row = 0; row < rows_; ++row)
+		{
+			multiplicand_idx = MAT_INDEX(*this, row, 0, 0);
+			multiplier_idx = MAT_INDEX(multiplier, row, 0, 0);
+			__m128* sse_multiplier = (__m128*)&multiplier.data_[multiplier_idx];
+			__m128* sse_multiplicand = (__m128*)&data_[multiplicand_idx];
+			//memcpy(sse_multiplier.m128_f32, &data_[multiplicand_idx], 3 * sizeof(float));
+			//sse_multiplicand.m128_f32[2] = multiplier.data_[multiplier_idx];
+			//sse_multiplicand.m128_f32[1] = multiplier.data_[multiplier_idx + 1];
+			//sse_multiplicand.m128_f32[0] = multiplier.data_[multiplier_idx + 2];
+			__m128 res = _mm_dp_ps(*sse_multiplier, *sse_multiplicand, 0xF1);
+			sum += res.m128_f32[0] + multiplier.data_[multiplicand_idx+4] * data_[multiplicand_idx+4];
+		}
+		return sum;
+	}
 	template <class T>
 	ion::Matrix<T> operator+(const ion::Matrix<T>& lhs, const ion::Matrix<T>& rhs)
 	{

@@ -74,6 +74,7 @@ namespace ion
 		void Rand(double min, double max);
 		Matrix Roi(uint32_t row_start, int64_t num_rows, uint32_t col_start = 0, int64_t num_cols = 0, uint32_t page_start = 0, int64_t num_pages = 0) const;
 		void Roi_Fast(uint32_t row_start, int64_t num_rows, uint32_t col_start = 0, int64_t num_cols = 0, uint32_t page_start = 0, int64_t num_pages = 0, Matrix* reused_roi = NULL) const;
+		void Roi_ReallyFast(uint32_t row_start, int64_t num_rows, uint32_t col_start = 0, int64_t num_cols = 0, uint32_t page_start = 0, int64_t num_pages = 0, Matrix* reused_roi = NULL) const;
 		uint32_t rows() const;
 		uint32_t cols() const;
 		uint32_t pages() const;
@@ -81,7 +82,7 @@ namespace ion
 		void Colcat(const Matrix& rhs);
 		void Pagecat(const Matrix& rhs);
 		uint64_t NumDiff(const Matrix& rhs) const;
-		uint64_t NumCells() const;
+		size_t NumCells() const;
 		bool IsContiguous() const;
 		Matrix Map(const Matrix<uint32_t>& row_indices, const Matrix<uint32_t>& col_indices) const;
 		void AssertNotNan() const;
@@ -104,6 +105,10 @@ namespace ion
 		//arithmetic
 		void ElementwiseMultiply(const Matrix<T>& multiplier, Matrix<T>* result) const;
 		void ElementwiseMultiplyRotated(const Matrix<T>& multiplier, Matrix<T>* result) const; //conceptually rotates the matrix 180 degrees before applying
+		T ElementwiseMultiplyRotatedWithSumFast(const Matrix<T>& multiplier) const;
+		T ElementwiseMultiplyRotatedWithSumFast2D(const Matrix<T>& multiplier) const;
+		T ElementwiseMultiplyRotatedWithSumFastSSE3x3(const Matrix<T>& multiplier);
+		T ElementwiseMultiplyRotatedWithSumFastSSE5x5(const Matrix<T>& multiplier);
 		T Sum() const;
 		ion::Matrix<T> Abs() const;
 		Matrix SumRows() const;
@@ -178,7 +183,7 @@ namespace ion
 		uint32_t rows_;
 		uint32_t cols_;
 		uint32_t pages_;
-		uint64_t allocated_cells_;
+		size_t allocated_cells_;
 		//size of the roi matrix, if any. It is guaranteed that roi_rows_ <= rows_, etc.
 		uint32_t roi_row_origin_;
 		uint32_t roi_col_origin_;

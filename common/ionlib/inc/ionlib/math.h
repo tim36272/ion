@@ -35,7 +35,7 @@ namespace ion
 #define FEET_TO_METERS (0.3048)
 
 	double randlf(double low, double high);
-	size_t randull(size_t low, size_t high);
+	uint64_t randull(uint64_t low, uint64_t high);
 	double random_normal_distribution(double low, double high);
 
 	template <class T>

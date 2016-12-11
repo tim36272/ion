@@ -26,9 +26,9 @@ namespace ion
 		return val;
 	}
 	//returns a value in the range [low,high].
-	size_t randull(size_t low, size_t high)
+	uint64_t randull(uint64_t low, uint64_t high)
 	{
-		size_t val = (size_t)(((double)std::rand() / (double)(RAND_MAX+1))*((high+1) - low) + low);
+		uint64_t val = (uint64_t)(((double)std::rand() / (double)(RAND_MAX+1))*((high+1) - low) + low);
 		LOGSANITY(low <= val && val <= high);
 		return val;
 	}

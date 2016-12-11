@@ -19,6 +19,10 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #include "ionlib/thread.h"
 #include "ionlib/net.h"
 #include "ionlib/time.h"
+#define MAT_ROI2D_FASTEST(mat,row,col,dst) {\
+dst.roi_row_origin_ = row + mat.roi_row_origin_;\
+dst.roi_col_origin_ = col + mat.roi_col_origin_;\
+} 
 namespace ion
 {
 	template <class T>
@@ -133,18 +137,19 @@ namespace ion
 			//this is only done if Z is sparse because otherwise every cell is guaranteed to be filled
 			output.Zero();
 		}
-		Matrix<T> temp(kernel.rows_, kernel.cols_, kernel.pages_);
-		Matrix<T> src_roi = mat_padded.Roi(0, 0);
-#pragma loop(hint_parallel(8))
-		for (uint32_t row = 0; row < output.rows_; ++row)
+		Matrix<T> src_roi = mat_padded.Roi(0, kernel.rows_,0,kernel.cols_);
+		const uint32_t row_max = output.rows_;
+		const uint32_t col_max = output.cols_;
+		const uint32_t page_max = output.pages_;
+		for (uint32_t row = 0; row < row_max; ++row)
 		{
-			for (uint32_t col = 0; col < output.cols_; ++col)
+			for (uint32_t col = 0; col < col_max; ++col)
 			{
 				if ((uint32_t)flags & (uint32_t)Matrix<T>::ConvFlag::CONV_FLAG_SPARSE_Z)
 				{
 					//check if this page is 0
 					bool all_zero = true;
-					for (uint32_t page = 0; page < output.pages_; ++page)
+					for (uint32_t page = 0; page < page_max; ++page)
 					{
 						if (mat_padded.At(row, col, page) != 0.0)
 						{
@@ -157,14 +162,25 @@ namespace ion
 						continue;
 					}
 				}
-				for (uint32_t page = 0; page < output.pages_; ++page)
+				for (uint32_t page = 0; page < page_max; ++page)
 				{
 					//now row,col,page is centered around the cell to convolve
 					//make a region of interest around this cell
-					mat_padded.Roi_Fast(row, kernel.rows_, col, kernel.cols_, page, kernel.pages_, &src_roi);
-					src_roi.ElementwiseMultiplyRotated(kernel, &temp);
+					if (kernel.pages_ == 1)
+					{
+						MAT_ROI2D_FASTEST(mat_padded, row, col, src_roi);
+					} else
+					{
+						mat_padded.Roi_ReallyFast(row, kernel.rows_, col, kernel.cols_, page, kernel.pages_, &src_roi);
+					}
 					//this doesn't use At for performance reasons
-					output.data_[MAT_INDEX(output,row, col, page)] = temp.Sum();
+					if (kernel.pages_ == 1)
+					{
+						output.data_[MAT_INDEX(output, row, col, page)] = src_roi.ElementwiseMultiplyRotatedWithSumFast2D(kernel);
+					} else
+					{
+						output.data_[MAT_INDEX(output, row, col, page)] = src_roi.ElementwiseMultiplyRotatedWithSumFast(kernel);
+					}
 				}
 			}
 		}
