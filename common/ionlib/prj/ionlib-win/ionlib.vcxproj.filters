@@ -111,6 +111,12 @@
     <ClInclude Include="..\..\inc\ionlib\byteswap.h">
       <Filter>Header Files\Util</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\double_buffer.h">
+      <Filter>Header Files\Data Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\matrix_opencv.h">
+      <Filter>Header Files\Math\Private</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\app_util.cpp">

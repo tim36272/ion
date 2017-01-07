@@ -22,4 +22,8 @@ namespace ion
 	{
 		CreateThread(0, 0, (LPTHREAD_START_ROUTINE)entry_point, usrdata, 0, 0);
 	}
+	void SuspendCurrentThread()
+	{
+		SuspendThread(GetCurrentThread());
+	}
 };

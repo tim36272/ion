@@ -54,16 +54,23 @@ namespace ion
 	//	format_ = FMT_ASCII;
 	//}
 	template <class T>
-	void ion::Matrix<T>::Construct(uint32_t rows, uint32_t cols, uint32_t pages)
+	void ion::Matrix<T>::Construct(uint32_t rows, uint32_t cols, uint32_t pages, T* data)
 	{
-
+		data_is_caller_provided_ = false;
 		//consider checking here if rows*cols*pages fits in a 64 bit integer
 		allocated_cells_ = (uint64_t)rows * (uint64_t)cols * (uint64_t)pages;
 		//allocate the matrix
 		if (allocated_cells_ > 0)
 		{
-			data_ = new T[allocated_cells_];
-			allocations_g++;
+			if (data == NULL)
+			{
+				data_ = new T[allocated_cells_];
+				allocations_g++;
+			} else
+			{
+				data_ = data;
+				data_is_caller_provided_ = true;
+			}
 			LOGASSERT(data_ != NULL);
 		} else
 		{
@@ -85,20 +92,24 @@ namespace ion
 		LOGWEAKASSERT(allocations_g >= deletions_g, "Allocations: %llu, Deletions: %llu", allocations_g, deletions_g);
 	}
 	template <class T>
-	ion::Matrix<T>::Matrix(uint32_t rows, uint32_t cols = 1, uint32_t pages = 1)
+	ion::Matrix<T>::Matrix(uint32_t rows, uint32_t cols = 1, uint32_t pages = 1, T* data = nullptr)
 	{
-		Construct(rows, cols, pages);
+		Construct(rows, cols, pages, data);
 	}
 	template <class T>
-	ion::Matrix<T>::~Matrix()
+	void ion::Matrix<T>::Destruct()
 	{
-
-		if (!is_roi_)
+		if (!is_roi_ && !data_is_caller_provided_)
 		{
 			delete[] data_;
 			deletions_g++;
 		}
 		LOGWEAKASSERT(allocations_g >= deletions_g, "Allocations: %llu, Deletions: %llu", allocations_g, deletions_g);
+	}
+	template <class T>
+	ion::Matrix<T>::~Matrix()
+	{
+		Destruct();
 	}
 	template <class T>
 	ion::Matrix<T>::Matrix(const ion::Matrix<T>& rhs)
@@ -140,8 +151,7 @@ namespace ion
 		//delete *this
 		if (!is_roi_)
 		{
-			delete data_;
-			deletions_g++;
+			Destruct();
 		}
 		allocated_cells_ = rhs.allocated_cells_;
 		if (!rhs.is_roi_)
@@ -177,7 +187,7 @@ namespace ion
 	void ion::Matrix<T>::Resize(uint32_t rows, uint32_t cols = 1, uint32_t pages = 1)
 	{
 		//it doesn't make sense to resize an ROI (just get a new one)
-		LOGASSERT(!is_roi_);
+		LOGASSERT(!is_roi_ && !data_is_caller_provided_);
 		size_t new_size = (size_t)rows * (size_t)cols * (size_t)pages;
 		if (new_size > allocated_cells_)
 		{

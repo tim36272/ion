@@ -51,7 +51,7 @@ namespace ion
 	{
 	public:
 		//basic
-		Matrix(uint32_t rows, uint32_t cols = 1, uint32_t pages = 1);
+		Matrix(uint32_t rows, uint32_t cols = 1, uint32_t pages = 1, T* data = nullptr);
 		Matrix(ion::TcpSocket& sock, bool receive_data);
 		~Matrix();
 		Matrix(const Matrix& rhs);
@@ -176,14 +176,19 @@ namespace ion
 		Matrix ResampleBilerp(uint32_t new_rows, uint32_t new_cols = 0, uint32_t new_pages = 0);
 
 		uint64_t user_id; //user can use this for whatever they want
+#ifdef OPENCV_CORE_HPP
+		//OpenCV
+		void imshow();
+#endif
 	private:
-		void Construct(uint32_t rows, uint32_t cols, uint32_t pages);
+		void Construct(uint32_t rows, uint32_t cols, uint32_t pages, T* data);
+		void Destruct();
 		Matrix() = delete; //default construction is only allowed by the library so this is private
 		//size of the non-roi matrix. It is guaranteed that (data_ + rows_*cols_*pages_) is the last element if !is_roi_
 		uint32_t rows_;
 		uint32_t cols_;
 		uint32_t pages_;
-		size_t allocated_cells_;
+		size_t   allocated_cells_;
 		//size of the roi matrix, if any. It is guaranteed that roi_rows_ <= rows_, etc.
 		uint32_t roi_row_origin_;
 		uint32_t roi_col_origin_;
@@ -195,8 +200,9 @@ namespace ion
 		uint32_t allocated_pages_;
 		bool     contiguous_;
 		bool     is_roi_;
-		T* data_;
+		T*       data_;
 		PrintFmt format_;
+		bool     data_is_caller_provided_; //data was not malloc'd by this library
 	};
 	template <class T>
 	std::ostream& operator<< (std::ostream& out, const ion::Matrix<T>& mat);

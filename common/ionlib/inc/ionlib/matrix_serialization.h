@@ -152,7 +152,7 @@ namespace ion
 		if (result.success())
 		{
 			//call my constructor to allocate myself
-			Construct(received_matrix.rows_, received_matrix.cols_, received_matrix.pages_);
+			Construct(received_matrix.rows_, received_matrix.cols_, received_matrix.pages_, NULL);
 			LOGASSERT(allocated_cells_ < (uint32_t)0xFFFFFFFF);
 			if (receive_data)
 			{

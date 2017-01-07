@@ -16,6 +16,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ionalgolib", "..\..\common\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sentry-win", "..\..\app\sentry\prj\sentry-win\sentry-win.vcxproj", "{ED3590CB-9704-4E9B-93A3-590BBD494E89}"
 	ProjectSection(ProjectDependencies) = postProject
+		{603E3855-6E37-4D3F-8284-EA1721D65F81} = {603E3855-6E37-4D3F-8284-EA1721D65F81}
 		{473E809F-98A8-4A92-A204-8A40775C3875} = {473E809F-98A8-4A92-A204-8A40775C3875}
 	EndProjectSection
 EndProject
@@ -26,6 +27,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gfx_skeleton-win", "..\..\a
 		{473E809F-98A8-4A92-A204-8A40775C3875} = {473E809F-98A8-4A92-A204-8A40775C3875}
 		{62B486BC-5F8E-46D4-B39F-E0582F220710} = {62B486BC-5F8E-46D4-B39F-E0582F220710}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ffwrapper", "..\..\common\ffwrapper\prj\ffwrapper-win\ffwrapper.vcxproj", "{603E3855-6E37-4D3F-8284-EA1721D65F81}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -91,6 +94,14 @@ Global
 		{C7682FC0-22FA-48DB-B839-84272BA3FD30}.Release|x64.Build.0 = Release|x64
 		{C7682FC0-22FA-48DB-B839-84272BA3FD30}.Release|x86.ActiveCfg = Release|Win32
 		{C7682FC0-22FA-48DB-B839-84272BA3FD30}.Release|x86.Build.0 = Release|Win32
+		{603E3855-6E37-4D3F-8284-EA1721D65F81}.Debug|x64.ActiveCfg = Debug|x64
+		{603E3855-6E37-4D3F-8284-EA1721D65F81}.Debug|x64.Build.0 = Debug|x64
+		{603E3855-6E37-4D3F-8284-EA1721D65F81}.Debug|x86.ActiveCfg = Debug|Win32
+		{603E3855-6E37-4D3F-8284-EA1721D65F81}.Debug|x86.Build.0 = Debug|Win32
+		{603E3855-6E37-4D3F-8284-EA1721D65F81}.Release|x64.ActiveCfg = Release|x64
+		{603E3855-6E37-4D3F-8284-EA1721D65F81}.Release|x64.Build.0 = Release|x64
+		{603E3855-6E37-4D3F-8284-EA1721D65F81}.Release|x86.ActiveCfg = Release|Win32
+		{603E3855-6E37-4D3F-8284-EA1721D65F81}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

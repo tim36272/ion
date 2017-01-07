@@ -20,5 +20,6 @@ namespace ion
 {
 	typedef void(*thread_ptr)(void*);
 	void StartThread(thread_ptr entry_point, void* usrdata);
+	void SuspendCurrentThread();
 }
 #endif //ION_THREAD_H_
