@@ -141,7 +141,7 @@ namespace ion
 		is_roi_ = rhs.is_roi_;
 		format_ = rhs.format_;
 		user_id = rhs.user_id;
-		LOGWEAKASSERT(allocations_g >= deletions_g, "Allocations: %llu, Deletions: %llu", allocations_g, deletions_g);
+		data_is_caller_provided_ = false;
 	}
 	template <class T>
 	ion::Matrix<T> ion::Matrix<T>::operator=(const ion::Matrix<T>& rhs)
@@ -153,11 +153,9 @@ namespace ion
 		{
 			Destruct();
 		}
-		allocated_cells_ = rhs.allocated_cells_;
 		if (!rhs.is_roi_)
 		{
-			data_ = new T[rhs.allocated_cells_];
-			allocations_g++;
+			Construct(rhs.allocated_rows_, rhs.allocated_cols_, rhs.allocated_pages_,nullptr);
 
 			//copy the data
 			memcpy(data_, rhs.data_, allocated_cells_ * sizeof(T));
@@ -165,7 +163,7 @@ namespace ion
 		{
 			data_ = rhs.data_;
 		}
-		LOGASSERT(data_ != NULL);
+		//We overwrite all the metadata because it is possible the source matrix had more allocated cells than were used, and we don't want to lose that information
 		rows_ = rhs.rows_;
 		cols_ = rhs.cols_;
 		pages_ = rhs.pages_;
@@ -179,7 +177,6 @@ namespace ion
 		is_roi_ = rhs.is_roi_;
 		format_ = rhs.format_;
 		user_id = rhs.user_id;
-		LOGWEAKASSERT(allocations_g >= deletions_g, "Allocations: %llu, Deletions: %llu", allocations_g, deletions_g);
 		return *this;
 	}
 	//////////////////////////////////////////////////// Elementry Operations

@@ -433,7 +433,7 @@ namespace ion
 			LOGFATAL("Error while writing video frame: %s\n", error_str);
 
 		}
-		//av_free_packet(&pkt);
+		av_free_packet(&pkt);
 	}
 	void FFWriter::Close()
 	{
