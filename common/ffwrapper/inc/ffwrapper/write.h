@@ -24,11 +24,13 @@ namespace ion
 	class FFWriter
 	{
 	public:
-		FFWriter(std::string uri);
+		FFWriter(std::string uri, uint32_t rows, uint32_t cols);
 		~FFWriter();
 		void WriteFrame(const ion::Image& img);
+		void Close();
 	private:
 		FFWriteImpl* impl;
+		bool video_open_;
 	};
 };
 #endif //FFWRAPPER_WRITE_H_

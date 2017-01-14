@@ -228,7 +228,15 @@ int main(int argc, char* argv[])
 
 	ion::Config cfg("sentry.cfg");
 	cfg.AddFile("credentials.cfg");
-	ion::FFWriter writer("test.mp4");
+	ion::FFWriter writer("test.mp4", 720, 1280);
+	ion::Image temp(720, 1280, 3);
+	temp.Zero();
+	for (uint32_t i = 0; i < 500; i++)
+	{
+		temp = temp + (uint8_t)1;
+		writer.WriteFrame(temp);
+	}
+	writer.Close();
 
 	//configuration
 	char uri[256];

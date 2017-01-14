@@ -99,7 +99,7 @@ namespace ion
 	template <class T>
 	void ion::Matrix<T>::Destruct()
 	{
-		if (!is_roi_ && !data_is_caller_provided_)
+		if (data_ && !is_roi_ && !data_is_caller_provided_)
 		{
 			delete[] data_;
 			deletions_g++;

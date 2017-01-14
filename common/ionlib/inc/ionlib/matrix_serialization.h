@@ -206,4 +206,10 @@ namespace ion
 			return false;
 		}
 	}
+	template <class T>
+	void ion::Matrix<T>::Memcpy(T* dest) const
+	{
+		LOGASSERT(IsContiguous());
+		memcpy(dest, data_, rows_*cols_*pages_);
+	}
 } //namespace ion

@@ -105,6 +105,7 @@ namespace ion
 		bool SendToSocket(ion::TcpSocket& sock) const;
 		bool SendToSocketNoData(ion::TcpSocket& sock) const;
 		bool RecvFromSocket(ion::TcpSocket& sock);
+		void Memcpy(T* dest) const; //memcpy from data_ to dest
 		//arithmetic
 		void ElementwiseMultiply(const Matrix<T>& multiplier, Matrix<T>* result) const;
 		void ElementwiseMultiplyRotated(const Matrix<T>& multiplier, Matrix<T>* result) const; //conceptually rotates the matrix 180 degrees before applying
