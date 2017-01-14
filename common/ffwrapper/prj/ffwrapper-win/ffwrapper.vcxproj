@@ -19,10 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\ffreader.cpp" />
+    <ClCompile Include="..\..\src\read.cpp" />
+    <ClCompile Include="..\..\src\write.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\inc\ffwrapper\ffreader.h" />
+    <ClInclude Include="..\..\inc\ffwrapper\common.h" />
+    <ClInclude Include="..\..\inc\ffwrapper\read.h" />
+    <ClInclude Include="..\..\inc\ffwrapper\write.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{603E3855-6E37-4D3F-8284-EA1721D65F81}</ProjectGuid>

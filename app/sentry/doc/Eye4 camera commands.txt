@@ -1,0 +1,23 @@
+http://ipcam1.elements:81/decoder_control.cgi?&loginuse=admin&loginpas=ztjckeye4u258qbe&command=COMMAND_HERE8&onestep=1&1
+var PTZ_UP=0;
+var PTZ_UP_STOP=1;
+var PTZ_DOWN=2;
+var PTZ_DOWN_STOP=3;
+var PTZ_LEFT=4;
+var PTZ_LEFT_STOP=5;
+var PTZ_RIGHT=6;
+var PTZ_RIGHT_STOP=7;
+var PTZ_LEFT_UP=90;
+var PTZ_RIGHT_UP=91;
+var PTZ_LEFT_DOWN=92;
+var PTZ_RIGHT_DOWN=93;
+var PTZ_STOP=1;
+
+var PTZ_CENTER=25;
+var PTZ_VPATROL=26;
+var PTZ_VPATROL_STOP=27;
+var PTZ_HPATROL=28;
+var PTZ_HPATROL_STOP=29;
+//RATE is in 0-20
+http://ipcam1.elements:81/decoder_control.cgi?ptz_patrol_rate=RATE&ptz_patrol_up_rate=RATE&ptz_patrol_down_rate=RATE&ptz_patrol_left_rate=RATE
+changed to -disable (shatterdome-24-disable)

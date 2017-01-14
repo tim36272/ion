@@ -14,27 +14,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
-#ifdef OPENCV_CORE_HPP
-
-#ifndef ION_MATRIX_OPENCV_H_
-#define ION_MATRIX_OPENCV_H_
-
-#include <opencv2\highgui.hpp>
-#include "ionlib\matrix.h"
+#ifndef FFWRAPPER_COMMON_H_
+#define FFWRAPPER_COMMON_H_
+#include <ionlib\matrix.h>
 namespace ion
 {
-	template <class T>
-	void ion::Matrix<T>::imshow()
-	{
-		cv::Mat image(rows_, cols_, CV_8UC3, data_);
-		cv::imshow("matrix", image);
-		cv::waitKey(1);
-	}
-	template <class T>
-	cv::Mat ion::Matrix<T>::asCvMat()
-	{
-		return cv::Mat(rows_, cols_, CV_8UC3, data_);
-	}
+	typedef ion::Matrix<uint8_t> Image;
 };
-#endif //ION_MATRIX_OPENCV_H_
-#endif //OPENCV_CORE_HPP
+#endif //FFWRAPPER_COMMON_H_

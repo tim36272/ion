@@ -23,21 +23,49 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
+
+#define QUEUE_NO_BLOCK (uint32_t)(-1)
+
 namespace ion
 {
 	template <class T>
 	class Queue
 	{
 	public:
-		void Push(T& data)
+		enum class FullBehavior
 		{
+			RING_BUFFER,
+			FAIL
+		};
+		Queue(uint32_t max_capacity = 0, FullBehavior full_behavior = FullBehavior::RING_BUFFER ) : max_capacity_(max_capacity), full_behavior_(full_behavior)
+		{
+
+		}
+		ion::Error Push(T& data)
+		{
+			//check if the queue is full
+			//dequeue items until the queue is below capacity. Note that this isn't entirely accurate: it is possible for another thread to dequeue an item while this thread is working, so don't depend on this to guarantee a max size
+			while(max_capacity_ > 0 && full_behavior_ == FullBehavior::RING_BUFFER && queue_.size() >= max_capacity_)
+			{
+				ion::Error result = Pop(QUEUE_NO_BLOCK);
+				if (!result.success())
+				{
+					LOGERROR("Queue was full but dequeing an item failed with result \"%s\"", result.str());
+				}
+			}
+			if (max_capacity_ > 0 && queue_.size() >= max_capacity_)
+			{
+				return ion::Error::Get(ion::Error::QUEUE_FULL);
+			}
+
 			{
 				std::lock_guard<std::mutex> lk(mutex_);
 				queue_.push(data);
 			}
 			cv_.notify_one();
+			return ion::Error::Get(ion::Error::SUCCESS);
 		}
-		ion::Error Pop(uint32_t milliseconds, T* item)
+		ion::Error Pop(uint32_t milliseconds, T* item = nullptr)
 		{
 			std::chrono::duration<double> timeout;
 			//get chrono duration
@@ -49,8 +77,8 @@ namespace ion
 				timeout = std::chrono::duration<int32_t, std::milli>(milliseconds);
 			}
 			std::unique_lock<std::mutex> lk(mutex_);
-			ion::Error result = ion::Error::Get(ion::Error::SUCCESS);
-			if (queue_.empty())
+			ion::Error result;
+			if (queue_.empty() && milliseconds != QUEUE_NO_BLOCK)
 			{
 				//wait for an item
 				cv_.wait_for(lk, timeout, [=]
@@ -64,17 +92,26 @@ namespace ion
 				result = ion::Error::Get(ion::Error::TIMEOUT);
 			} else
 			{
-				*item = queue_.front();
+				if (item)
+				{
+					*item = queue_.front();
+				}
 				queue_.pop();
 				result = ion::Error::Get(ion::Error::SUCCESS);
 			}
 			lk.unlock();
 			return result;
 		}
+		size_t size()
+		{
+			return queue_.size();
+		}
 	private:
 		std::condition_variable cv_;
 		std::mutex mutex_;
 		std::queue<T> queue_;
+		uint32_t max_capacity_;
+		FullBehavior full_behavior_;
 	};
 }
 #endif //ION_QUEUE_H_

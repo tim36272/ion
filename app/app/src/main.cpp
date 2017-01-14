@@ -4,6 +4,6 @@
 int main(int argc, char* argv[])
 {
 	ion::InitSockets();
-	ion::LogInit("app");
+	ion::LogInit("app.log");
 	return 0;
 }

@@ -30,6 +30,7 @@ namespace ion
 	{
 	public:
 		Config(const char* filename);
+		void AddFile(const char* filename);
 
 		double Getllf(const char* keyname)
 		{

@@ -21,8 +21,13 @@ namespace ion
 {
 	Config::Config(const char* filename)
 	{
+		AddFile(filename);
+	}
+	void Config::AddFile(const char* filename)
+	{
 		std::ifstream fin;
 		fin.open(filename);
+		LOGASSERT(fin.is_open());
 		//parse each line
 		ConfigItem_t item;
 		bool reading_key = true;
@@ -53,7 +58,7 @@ namespace ion
 					break;
 				case '=':
 					//switch to reading the value
-					LOGASSERT(reading_key && !value_read,"Config key was incorrectly formatted");
+					LOGASSERT(reading_key && !value_read, "Config key was incorrectly formatted");
 					item.first[string_index] = '\0';
 					reading_key = false;
 					string_index = 0;

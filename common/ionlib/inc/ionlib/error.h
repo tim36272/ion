@@ -30,7 +30,9 @@ namespace ion
 			PARAMETER,
 			PARAMETER_VALUE,
 			SOCKET,
+			//Queue
 			QUEUE_EMPTY,
+			QUEUE_FULL,
 			//semaphores
 			TIMEOUT,
 			ABANDONED
@@ -42,11 +44,13 @@ namespace ion
 		static Error Get(Error::status_t status);
 		
 		bool operator==(const ion::Error& rhs) const;
+		bool operator!=(const ion::Error& rhs) const;
 		bool operator <(const ion::Error& rhs) const;
 		bool success()
 		{
 			return id_ == SUCCESS;
 		}
+		std::string str() const;
 	private:
 		Error(Error::status_t id);
 		Error::status_t id_;

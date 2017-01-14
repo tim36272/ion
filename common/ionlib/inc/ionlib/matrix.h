@@ -24,6 +24,9 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #include <limits>
 #include "ionlib/queue.h"
 #include "ionlib/net.h"
+#ifdef OPENCV_CORE_HPP
+#include "opencv2/imgproc.hpp"
+#endif //#ifdef OPENCV_CORE_HPP
 #define MAT_INDEX(mat,x,y,z) ( ((x)+(mat).roi_row_origin_) * (mat).allocated_pages_ * (mat).allocated_cols_ +\
 							  ( (y)+(mat).roi_col_origin_) * (mat).allocated_pages_ +\
 								(z)+(mat).roi_page_origin_)
@@ -179,6 +182,7 @@ namespace ion
 #ifdef OPENCV_CORE_HPP
 		//OpenCV
 		void imshow();
+		cv::Mat asCvMat();
 #endif
 	private:
 		void Construct(uint32_t rows, uint32_t cols, uint32_t pages, T* data);

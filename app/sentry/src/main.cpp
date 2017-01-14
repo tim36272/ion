@@ -1,25 +1,221 @@
 
 #include <opencv2\core.hpp>
+#include <opencv2\video.hpp>
 #include "ionlib\matrix_opencv.h"
 #include "ionlib\log.h"
 #include "ionlib\net.h"
 #include "ionlib\thread.h"
+#include "ionlib\timer.h"
+#include "ionlib\config.h"
 
-#include "ffwrapper\ffreader.h"
+#include "ffwrapper\read.h"
+#include "ffwrapper\write.h"
+
 
 
 struct CameraIoConfig_t
 {
-	uint32_t dummy;
+	CameraIoConfig_t(std::string camera_uri) : reader(camera_uri)
+	{
+	}
+	ion::FFReader reader;
+	ion::Timer fps;
+	std::vector<ion::Queue<ion::Image>*> output;
 };
+
+class EventBase
+{
+public:
+	enum class Type
+	{
+		EVENT_STATUS,
+		CAMERA_MOTION,
+		PIR
+	};
+	Type event_type_;
+	bool in_progress_;
+};
+
+struct CameraProcConfig_t
+{
+	ion::Queue<ion::Matrix<uint8_t>> input_;
+	std::vector<ion::Queue<ion::Image>*> image_output_;
+	std::vector<ion::Queue<EventBase*>*> event_output_;
+
+	ion::Timer fps_;
+	float motion_threshold_;
+};
+
+struct CameraEventManagerConfig_t
+{
+	ion::Queue<EventBase*> input_;
+	std::vector<ion::Queue<EventBase>*> output_;
+	uint32_t event_spacing_; //time, in milliseconds, between events before considering them finished
+};
+
+struct CameraOutputConfig_t
+{
+	ion::Queue<ion::Image> input_;
+	ion::Queue<EventBase> event_;
+	ion::Timer fps_;
+
+};
+
 
 void cameraIoThread(void* args)
 {
-	ion::FFReader reader("C:\\video.mp4");
+	CameraIoConfig_t* io = (CameraIoConfig_t*)args;
 	while (true)
 	{
-		ion::Matrix<uint8_t> temp = reader.ReadFrame();
-		temp.imshow();
+		ion::Image temp = io->reader.ReadFrame();
+		io->fps.PeriodBegin();
+		for (std::vector<ion::Queue<ion::Image>*>::iterator it = io->output.begin(); it != io->output.end(); ++it)
+		{
+			(*it)->Push(temp.DeepCopy());
+		}
+	}
+}
+
+void cameraProcThread(void* args)
+{
+	CameraProcConfig_t* camera_proc = (CameraProcConfig_t*)args;
+	cv::Ptr<cv::BackgroundSubtractorMOG2> mog2 = cv::createBackgroundSubtractorMOG2(500, 16.0, true);
+	cv::Mat foreground_mask;
+
+	while (true)
+	{
+		ion::Matrix<uint8_t> input(0);
+		ion::Error result = camera_proc->input_.Pop(0, &input);
+		camera_proc->fps_.PeriodBegin();
+		if (result.success())
+		{
+			cv::Mat img = input.asCvMat();
+			cv::GaussianBlur(img, img, cv::Size(3, 3), 0);
+			mog2->apply(img, foreground_mask);
+			cv::threshold(foreground_mask, foreground_mask, 255 / 2 + 1, 230, cv::THRESH_BINARY);
+			cv::dilate(foreground_mask, foreground_mask, cv::Mat(), cv::Point(-1, -1), 2);
+			cv::erode(foreground_mask, foreground_mask, cv::Mat(), cv::Point(-1, -1), 4);
+			cv::Mat black(img.rows, img.cols, CV_8UC3, cv::Scalar(0));
+			cv::bitwise_or(black, img, black, foreground_mask);
+			LOGINFO("FPS: %lf", 1.0 / (camera_proc->fps_.GetMean() / 1000.0));
+			
+			//compute the number of moving pixels in the image to detect if this event is in progress
+			cv::Scalar num_moving_pixels = cv::sum(foreground_mask);
+			EventBase *camera_event = new EventBase;
+			camera_event->event_type_ = EventBase::Type::CAMERA_MOTION;
+			if ((float)num_moving_pixels[0] / (foreground_mask.rows * foreground_mask.cols) > camera_proc->motion_threshold_)
+			{
+				camera_event->in_progress_ = true;
+			} else
+			{
+				camera_event->in_progress_ = false;
+			}
+			for (std::vector<ion::Queue<EventBase*>*>::iterator it = camera_proc->event_output_.begin(); it != camera_proc->event_output_.end(); ++it)
+			{
+				(*it)->Push(camera_event);
+			}
+		} else
+		{
+			LOGINFO("Got result \"%s\" in processing thread when trying to dequeue a frame", result.str());
+		}
+	}
+
+}
+void cameraEventManagerThread(void* args)
+{
+	CameraEventManagerConfig_t* event_proc = (CameraEventManagerConfig_t*)args;
+	EventBase default_event;
+	EventBase* input_event;
+	EventBase output_event;
+	output_event.event_type_ = EventBase::Type::EVENT_STATUS;
+	default_event.event_type_ = EventBase::Type::CAMERA_MOTION;
+	default_event.in_progress_ = false;
+	double last_in_progress_tov = -DBL_MAX;
+	while (true)
+	{
+		//wait for events
+		ion::Error result = event_proc->input_.Pop(event_proc->event_spacing_, &input_event);
+		//treat timeouts as a non-event
+		if (result == ion::Error::Get(ion::Error::TIMEOUT))
+		{
+			input_event = &default_event;
+			result = ion::Error::Get(ion::Error::SUCCESS);
+		}
+		if (result.success())
+		{
+			if (input_event->event_type_ == EventBase::Type::CAMERA_MOTION && input_event->in_progress_ == true)
+			{
+				//tell the output thread to record
+				output_event.in_progress_ = true;
+				last_in_progress_tov = ion::TimeGet();
+			} else if (ion::TimeGet() - last_in_progress_tov < 5000) {
+				output_event.in_progress_ = true;
+			} else
+			{
+				output_event.in_progress_ = false;
+			}
+		} else
+		{
+			//a different error occurred
+			LOGINFO("Got result \"%s\" in event manager thread when trying to dequeue a frame", result.str());
+			continue;
+		}
+		//send the event status
+		for (std::vector<ion::Queue<EventBase>*>::iterator it = event_proc->output_.begin(); it != event_proc->output_.end(); ++it)
+		{
+			(*it)->Push(output_event);
+		}
+	}
+}
+
+void cameraOutputThread(void* args)
+{
+	CameraOutputConfig_t* output_proc = (CameraOutputConfig_t*)args;
+	EventBase event_in_progress;
+	event_in_progress.in_progress_ = false;
+	ion::Error result;
+	bool video_file_open = false;
+	while (true)
+	{
+		//the queue automatically ringbuffers, and is sized per the pre-record length. So, when not currently outputting, we only have to listen for events, not frames
+		if (event_in_progress.in_progress_ == false)
+		{
+			result = output_proc->event_.Pop(0, &event_in_progress);
+		} else
+		{
+			result = output_proc->event_.Pop(1, &event_in_progress);
+		}
+		if (!result.success() && result != ion::Error::Get(ion::Error::TIMEOUT))
+		{
+			LOGINFO("Got result \"%s\" in the output thread when trying to dequeue an event", result.str());
+		}
+		LOGASSERT(event_in_progress.event_type_ == EventBase::Type::EVENT_STATUS);
+		if (event_in_progress.in_progress_ == true)
+		{
+			if (!video_file_open)
+			{
+				//open a new video file
+				//TODO
+				LOGINFO("Opening video file");
+				video_file_open = true;
+			}
+			//dequeue all of the frames currently in the buffer
+			size_t frames_to_dequeue = output_proc->input_.size();
+			for (size_t frame_index = 0; frame_index < frames_to_dequeue; ++frame_index)
+			{
+				//write frames to file
+				//TODO
+			}
+		} else
+		{
+			//close the video file
+			//TODO
+			if (video_file_open)
+			{
+				video_file_open = false;
+				LOGINFO("Closing video file");
+			}
+		}
 	}
 }
 
@@ -28,13 +224,32 @@ void cameraIoThread(void* args)
 int main(int argc, char* argv[])
 {
 	ion::InitSockets();
-	ion::LogInit("sentry");
+	ion::LogInit("sentry.log");
+
+	ion::Config cfg("sentry.cfg");
+	cfg.AddFile("credentials.cfg");
+	ion::FFWriter writer("test.mp4");
 
 	//configuration
-	CameraIoConfig_t config;
+	char uri[256];
+	sprintf_s(uri, "http://ipcam3.elements:81/videostream.cgi?loginuse=%s&loginpas=%s", cfg.Getc("CAMERA_USERNAME"), cfg.Getc("CAMERA_PASSWORD"));
+	CameraIoConfig_t ioConfig(uri);
+	CameraProcConfig_t procConfig;
+	CameraEventManagerConfig_t eventProc;
+	CameraOutputConfig_t outputConfig;
+
+	ioConfig.output.push_back(&procConfig.input_);
+	ioConfig.output.push_back(&outputConfig.input_);
+	procConfig.event_output_.push_back(&eventProc.input_);
+	procConfig.motion_threshold_ = cfg.Getf("MOTION_THRESHOLD");
+	eventProc.output_.push_back(&outputConfig.event_);
+
 	//launch threads to connect to cameras
 		//cameras capture from source and place the image into a queue
-	ion::StartThread(cameraIoThread, (void*)&config);
+	ion::StartThread(cameraIoThread, (void*)&ioConfig);
+	ion::StartThread(cameraProcThread, (void*)&procConfig);
+	ion::StartThread(cameraEventManagerThread, (void*)&eventProc);
+	ion::StartThread(cameraOutputThread, (void*)&outputConfig);
 
 	ion::SuspendCurrentThread();
 	//launch threads to process images

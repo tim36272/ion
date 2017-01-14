@@ -15,12 +15,21 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\inc\ffwrapper\ffreader.h">
+    <ClInclude Include="..\..\inc\ffwrapper\common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ffwrapper\read.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\ffwrapper\write.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\ffreader.cpp">
+    <ClCompile Include="..\..\src\read.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\write.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

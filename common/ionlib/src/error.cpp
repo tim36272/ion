@@ -20,11 +20,14 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 
 std::set<ion::Error> all_errors = { 
 	{ ion::Error::SUCCESS,"No error occurred" },
+	{ ion::Error::UNKNOWN,"An unknown error occurred" },
 	{ ion::Error::PARAMETER,"Parameter was invalid" },
 	{ ion::Error::PARAMETER_VALUE,"Parameter value was out of range" },
 	{ ion::Error::SOCKET, "Socket error"},
-	{ ion::Error::QUEUE_EMPTY, "Queue was empty"},
-	{ ion::Error::TIMEOUT, "A timeout ocurred"}
+	{ ion::Error::QUEUE_EMPTY, "Queue was empty" },
+	{ ion::Error::QUEUE_FULL, "Queue was full"},
+	{ ion::Error::TIMEOUT, "A timeout ocurred" },
+	{ ion::Error::ABANDONED, "A mutex was abandoned"}
 };
 
 ion::Error::Error(ion::Error::status_t id, std::string explanation)
@@ -53,4 +56,13 @@ bool ion::Error::operator <(const ion::Error & rhs) const
 bool ion::Error::operator==(const ion::Error & rhs) const
 {
 	return (rhs.id_ == this->id_);
+}
+bool ion::Error::operator!=(const ion::Error & rhs) const
+{
+	return (rhs.id_ != this->id_);
+}
+
+std::string ion::Error::str() const
+{
+	return explanation_;
 }

@@ -40,3 +40,14 @@
 *.db
 *.opendb
 *.vcxproj.user
+*.iobj
+*.ipdb
+
+#Configuration files
+credentials.cfg
+
+#Temp files
+*.TMP
+
+#Media files
+*.mp4
