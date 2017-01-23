@@ -62,7 +62,7 @@ namespace ion
 			}
 			cursor++;
 		}
-		int num_bytes_written = snprintf(buffer, IONLOG_MAX_MESSAGE_LENGTH, "%9.3lf %s:%d ", ion::TimeGet()/1000.0, file, line);
+		int num_bytes_written = snprintf(buffer, IONLOG_MAX_MESSAGE_LENGTH, "%9.3lf %s:%d ", ion::TimeGet(), file, line);
 		num_bytes_written += vsnprintf(buffer + num_bytes_written, IONLOG_MAX_MESSAGE_LENGTH - num_bytes_written, format, args);
 		num_bytes_written += snprintf(buffer + num_bytes_written, IONLOG_MAX_MESSAGE_LENGTH - num_bytes_written, "\r\n");
 		printf(buffer);

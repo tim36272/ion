@@ -14,24 +14,33 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef FFWRAPPER_READ_H_
-#define FFWRAPPER_READ_H_
-#include <string>
-#include "ffwrapper\common.h"
+#ifndef ION_BACKDOOR_H_
+#define ION_BACKDOOR_H_
+#include "ionlib\ip_address.h"
+#include "ionlib\net.h"
+extern "C" {
+	struct telnet_t;
+	union telnet_event_t;
+}
 namespace ion
 {
-	struct FFReadImpl;
-	class FFReader
+	class Backdoor
 	{
 	public:
-		FFReader(std::string uri);
-		~FFReader();
-		ion::Image ReadFrame();
-		uint32_t GetWidth();
-		uint32_t GetHeight();
-		double GetFps();
+		Backdoor(IpPort port);
 	private:
-		FFReadImpl* impl;
+		IpPort port_;
+		void Init();
+		friend void backdoorThread(void* args);
+		friend void telnetEventHandler(telnet_t *telnet, telnet_event_t *ev, void *user_data);
+		friend void _online(const char *line, ion::Backdoor *ud);
+		void Run();
+		ion::TcpSocket socket_;
+		telnet_t* telnet_;
+		void _input(const char *buffer, size_t size);
+		char linebuf[256];
+		int linepos;
+
 	};
 };
-#endif //FFWRAPPER_READ_H_
+#endif //ION_BACKDOOR_H_

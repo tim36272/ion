@@ -47,6 +47,7 @@ extern "C" {
 			int32_t height_;
 			int32_t num_channels_;
 			AVPixelFormat pix_fmt_;
+			AVRational frame_rate_;
 			int video_dst_bufsize_;
 			int      video_dst_linesize_[4];
 
@@ -174,22 +175,25 @@ extern "C" {
 			memset(impl, 0, sizeof(FFReadImpl));
 
 			/* register all formats and codecs */
+			//av_log_set_level(AV_LOG_DEBUG);
+			avcodec_register_all();
 			av_register_all();
+			avformat_network_init();
 
 			avformat_network_init();
 
 			/* open input file, and allocate format context */
 			if (avformat_open_input(&impl->fmt_ctx_, uri.c_str(), NULL, NULL) < 0)
 			{
-				fprintf(stderr, "Could not open source file %s\n", uri.c_str());
-				exit(1);
+				LOGFATAL("Could not open source file %s", uri.c_str());
 			}
 
 			/* retrieve stream information */
+
+			//*(((uint8_t*)impl->fmt_ctx_->priv_data)+48) = 6;
 			if (avformat_find_stream_info(impl->fmt_ctx_, NULL) < 0)
 			{
-				fprintf(stderr, "Could not find stream information\n");
-				exit(1);
+				LOGFATAL("Could not find stream information");
 			}
 
 			if (open_codec_context(&impl->video_stream_index_, &impl->video_dec_ctx_, impl->fmt_ctx_, AVMEDIA_TYPE_VIDEO) >= 0)
@@ -200,6 +204,7 @@ extern "C" {
 				impl->width_ = impl->video_dec_ctx_->width;
 				impl->height_ = impl->video_dec_ctx_->height;
 				impl->pix_fmt_ = impl->video_dec_ctx_->pix_fmt;
+				impl->frame_rate_ = impl->fmt_ctx_->streams[0]->avg_frame_rate;
 				result = av_image_alloc(impl->video_dst_data_, impl->video_dst_linesize_,
 										impl->width_, impl->height_, impl->pix_fmt_, 1);
 				if (result < 0)
@@ -273,5 +278,17 @@ extern "C" {
 			sws_scale(impl->sws_context_, impl->frame_->data, impl->frame_->linesize, 0, impl->height_, &impl->rgb_data_, &stride);
 			ion::Image temp(impl->height_,impl->width_,3, impl->rgb_data_);
 			return temp;
+		}
+		uint32_t FFReader::GetWidth()
+		{
+			return (uint32_t)impl->width_;
+		}
+		uint32_t FFReader::GetHeight()
+		{
+			return (uint32_t)impl->height_;
+		}
+		double FFReader::GetFps()
+		{
+			return ((double)impl->frame_rate_.num)/((double)impl->frame_rate_.den);
 		}
 	};

@@ -148,7 +148,7 @@ namespace ion
 		ion::Matrix<T> received_matrix(0, 0, 0);
 		size_t bytes_read;
 		ion::Error result;
-		result = sock.Recv((char*)&received_matrix, sizeof(ion::Matrix<T>), 0, NULL, NULL, &bytes_read);
+		result = sock.Recv((char*)&received_matrix, sizeof(ion::Matrix<T>), NULL, NULL, &bytes_read);
 		if (result.success())
 		{
 			//call my constructor to allocate myself
@@ -157,7 +157,7 @@ namespace ion
 			if (receive_data)
 			{
 				//get data
-				result = sock.Recv((char*)data_, (uint32_t)(allocated_cells_ * sizeof(T)), 0, NULL, NULL, &bytes_read);
+				result = sock.Recv((char*)data_, (uint32_t)(allocated_cells_ * sizeof(T)), NULL, NULL, &bytes_read);
 				if (!result.success())
 				{
 					//something went wrong
@@ -182,7 +182,7 @@ namespace ion
 		ion::Matrix<T> received_matrix(0, 0, 0);
 		size_t bytes_read;
 		ion::Error result;
-		result = sock.Recv((char*)&received_matrix, sizeof(ion::Matrix<T>), 0, NULL, NULL, &bytes_read);
+		result = sock.Recv((char*)&received_matrix, sizeof(ion::Matrix<T>), NULL, NULL, &bytes_read);
 		if (result.success())
 		{
 			//verify the matrix is the same size as me
@@ -190,7 +190,7 @@ namespace ion
 			LOGASSERT(allocated_cells_ < (uint32_t)0xFFFFFFFF);
 			LOGASSERT(!received_matrix.is_roi_);
 			//receive the data
-			result = sock.Recv((char*)data_, (uint32_t)(allocated_cells_ * sizeof(T)), 0, NULL, NULL, &bytes_read);
+			result = sock.Recv((char*)data_, (uint32_t)(allocated_cells_ * sizeof(T)), NULL, NULL, &bytes_read);
 			if (!result.success())
 			{
 				//something went wrong

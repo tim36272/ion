@@ -17,6 +17,7 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #ifndef ION_IP_ADDRESS_H_
 #define ION_IP_ADDRESS_H_
 #include <stdint.h>
+#include "ionlib\byteswap.h"
 namespace ion
 {
 	class IpAddress
@@ -25,13 +26,32 @@ namespace ion
 		IpAddress() {}
 		IpAddress(const char* ip_address);
 		IpAddress(uint32_t ip_address);
-		uint32_t as_integer(); //returns in network byte order
-		const char* as_string();
+		uint32_t as_integer() const; //returns in network byte order
+		const char* as_string() const;
 		void from_integer(uint32_t ip_address);
 		void from_string(const char* ip_address);
 	private:
 		uint32_t address_;
 		char address_string_[16];
+	};
+
+	class IpPort
+	{
+	public:
+		IpPort() { }
+		enum class Order
+		{
+			HOST = 0,
+			NETWORK = 1
+		};
+		IpPort(uint16_t port, Order order);
+		uint16_t AsNetworkOrder() const;
+		uint16_t AsHostOrder() const;
+		void FromNetworkOrder(uint16_t port);
+		void FromHostOrder(uint16_t port);
+		bool operator==(const IpPort& rhs);
+	private:
+		uint16_t port_; //port in network byte order
 	};
 }
 #endif //ION_IP_ADDRESS_H_

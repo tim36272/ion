@@ -7,6 +7,7 @@
 #include "ionlib\thread.h"
 #include "ionlib\timer.h"
 #include "ionlib\config.h"
+#include "ionlib\backdoor.h"
 
 #include "ffwrapper\read.h"
 #include "ffwrapper\write.h"
@@ -58,18 +59,20 @@ struct CameraOutputConfig_t
 	ion::Queue<ion::Image> input_;
 	ion::Queue<EventBase> event_;
 	ion::Timer fps_;
-
+	ion::FFWriter* writer;
 };
 
 
 void cameraIoThread(void* args)
 {
-	CameraIoConfig_t* io = (CameraIoConfig_t*)args;
+	CameraIoConfig_t* io_proc = (CameraIoConfig_t*)args;
 	while (true)
 	{
-		ion::Image temp = io->reader.ReadFrame();
-		io->fps.PeriodBegin();
-		for (std::vector<ion::Queue<ion::Image>*>::iterator it = io->output.begin(); it != io->output.end(); ++it)
+		ion::Image temp = io_proc->reader.ReadFrame();
+
+		io_proc->fps.PeriodBegin();
+		LOGINFO("Real FPS: %llf, FFMPEG Fps: %llf", io_proc->fps.GetMean() * 1000, io_proc->reader.GetFps());
+		for (std::vector<ion::Queue<ion::Image>*>::iterator it = io_proc->output.begin(); it != io_proc->output.end(); ++it)
 		{
 			(*it)->Push(temp.DeepCopy());
 		}
@@ -90,6 +93,8 @@ void cameraProcThread(void* args)
 		if (result.success())
 		{
 			cv::Mat img = input.asCvMat();
+			cv::imshow("raw", img);
+			cv::waitKey(1);
 			cv::GaussianBlur(img, img, cv::Size(3, 3), 0);
 			mog2->apply(img, foreground_mask);
 			cv::threshold(foreground_mask, foreground_mask, 255 / 2 + 1, 230, cv::THRESH_BINARY);
@@ -97,7 +102,7 @@ void cameraProcThread(void* args)
 			cv::erode(foreground_mask, foreground_mask, cv::Mat(), cv::Point(-1, -1), 4);
 			cv::Mat black(img.rows, img.cols, CV_8UC3, cv::Scalar(0));
 			cv::bitwise_or(black, img, black, foreground_mask);
-			LOGINFO("FPS: %lf", 1.0 / (camera_proc->fps_.GetMean() / 1000.0));
+			//LOGINFO("Processing FPS: %lf", 1.0 / (camera_proc->fps_.GetMean() / 1000.0));
 			
 			//compute the number of moving pixels in the image to detect if this event is in progress
 			cv::Scalar num_moving_pixels = cv::sum(foreground_mask);
@@ -148,7 +153,7 @@ void cameraEventManagerThread(void* args)
 				//tell the output thread to record
 				output_event.in_progress_ = true;
 				last_in_progress_tov = ion::TimeGet();
-			} else if (ion::TimeGet() - last_in_progress_tov < 5000) {
+			} else if (ion::TimeGet() - last_in_progress_tov < 5.0) {
 				output_event.in_progress_ = true;
 			} else
 			{
@@ -194,17 +199,32 @@ void cameraOutputThread(void* args)
 		{
 			if (!video_file_open)
 			{
+				//get one frame so we know the dimensions
+				ion::Image frame(0);
+				output_proc->input_.Pop(0, &frame);
 				//open a new video file
-				//TODO
-				LOGINFO("Opening video file");
+				char video_filename[256];
+				sprintf_s(video_filename, "output_%lf.mp4", ion::TimeGetEpoch());
+				LOGINFO("Opening video file %s", video_filename);
 				video_file_open = true;
+				output_proc->writer = new ion::FFWriter(video_filename, frame.rows(), frame.cols());
+				output_proc->writer->WriteFrame(frame);
 			}
 			//dequeue all of the frames currently in the buffer
 			size_t frames_to_dequeue = output_proc->input_.size();
-			for (size_t frame_index = 0; frame_index < frames_to_dequeue; ++frame_index)
+			if (frames_to_dequeue > 0)
 			{
-				//write frames to file
-				//TODO
+				LOGINFO("Dequing %llu frames", frames_to_dequeue);
+				ion::Image frame(0);
+				for (size_t frame_index = 0; frame_index < frames_to_dequeue; ++frame_index)
+				{
+					//write frames to file
+					output_proc->input_.Pop(0, &frame);
+					output_proc->writer->WriteFrame(frame);
+				}
+			} else
+			{
+				ion::ThreadSleep(0);
 			}
 		} else
 		{
@@ -214,6 +234,8 @@ void cameraOutputThread(void* args)
 			{
 				video_file_open = false;
 				LOGINFO("Closing video file");
+				output_proc->writer->Close();
+				delete output_proc->writer;
 			}
 		}
 	}
@@ -228,19 +250,13 @@ int main(int argc, char* argv[])
 
 	ion::Config cfg("sentry.cfg");
 	cfg.AddFile("credentials.cfg");
-	ion::FFWriter writer("test.mp4", 720, 1280);
-	ion::Image temp(720, 1280, 3);
-	temp.Zero();
-	for (uint32_t i = 0; i < 500; i++)
-	{
-		temp = temp + (uint8_t)1;
-		writer.WriteFrame(temp);
-	}
-	writer.Close();
 
 	//configuration
 	char uri[256];
-	sprintf_s(uri, "http://ipcam3.elements:81/videostream.cgi?loginuse=%s&loginpas=%s", cfg.Getc("CAMERA_USERNAME"), cfg.Getc("CAMERA_PASSWORD"));
+	//sprintf_s(uri, "http://ipcam3.elements:81/videostream.cgi?loginuse=%s&loginpas=%s", cfg.Getc("CAMERA_USERNAME"), cfg.Getc("CAMERA_PASSWORD"));
+	sprintf_s(uri, "rtsp://%s:%s@192.168.16.16:554/udp/av0_0", cfg.Getc("CAMERA_USERNAME"), cfg.Getc("CAMERA_PASSWORD"));
+	ion::IpPort backdoor_port(cfg.Gets("BACKDOOR_PORT"), ion::IpPort::Order::HOST);
+	ion::Backdoor backdoor(backdoor_port);
 	CameraIoConfig_t ioConfig(uri);
 	CameraProcConfig_t procConfig;
 	CameraEventManagerConfig_t eventProc;

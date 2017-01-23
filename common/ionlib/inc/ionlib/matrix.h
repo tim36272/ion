@@ -255,7 +255,7 @@ namespace ion
 	};
 	struct ConvolveWorker_t
 	{
-		uint16_t work_recv_port; //receives work on this port
+		ion::IpPort work_recv_port; //receives work on this port
 		ion::IpAddress addr; //used to disambiguate workers
 		ion::TcpSocket sock;
 		ConvolveTask<neuronWorker_t> current_task;

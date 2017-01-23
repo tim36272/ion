@@ -17,4 +17,6 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #ifndef ION_DEF_H_
 #define ION_DEF_H_
 #define	NOMINMAX
+#include <stdint.h>
+typedef char byte_t;
 #endif //ION_DEF_H_

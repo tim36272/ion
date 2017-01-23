@@ -117,6 +117,9 @@
     <ClInclude Include="..\..\inc\ionlib\matrix_opencv.h">
       <Filter>Header Files\Math\Private</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\backdoor.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\app_util.cpp">
@@ -156,6 +159,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\byteswap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\backdoor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

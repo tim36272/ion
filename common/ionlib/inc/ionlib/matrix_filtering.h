@@ -330,16 +330,11 @@ namespace ion
 	bool InitWorker(ConvolveWorker_t& worker)
 	{
 		ion::Error result;
-		result = worker.sock.Create(worker.work_recv_port, worker.addr);
-		if (!result.success())
-		{
-			LOGWARN("Failed to create socket for worker at IP %s port %d", worker.addr.as_string(), ntohs(worker.work_recv_port));
-			return false;
-		}
+		worker.sock.Create(worker.work_recv_port, worker.addr);
 		result = worker.sock.Listen();
 		if (!result.success())
 		{
-			LOGWARN("Failed to listen socket for worker at IP %s port %d", worker.addr.as_string(), ntohs(worker.work_recv_port));
+			LOGWARN("Failed to listen socket for worker at IP %s port %d", worker.addr.as_string(), worker.work_recv_port.AsHostOrder());
 			return false;
 		}
 		return true;
@@ -385,7 +380,7 @@ namespace ion
 		ConvolutionTaskerData<T>* task_data = (ConvolutionTaskerData<T>*)usrdata;
 		ion::UdpSocket announcement_socket;
 		announcement_socket.Create();
-		announcement_socket.Bind(task_data->announcement_port);
+		announcement_socket.Bind(ion::IpPort(task_data->announcement_port,ion::IpPort::Order::HOST));
 		while (true)
 		{
 			//check for worker announcements
@@ -399,13 +394,13 @@ namespace ion
 					//a worker has joined, add them to the pool
 					ConvolveWorker_t worker;
 					worker.addr = worker_ip;
-					worker.work_recv_port = announcement.recv_port;
+					worker.work_recv_port = ion::IpPort(announcement.recv_port, ion::IpPort::Order::HOST);
 					if (INVALID_CONVOLVE_WORKER != WorkerInPool(workers, worker))
 					{
 						InitWorker(worker);
 						InsertWorker(workers, worker);
 						InsertWorker(free_workers, worker);
-						LOGINFO("Added convolve worker at address %s port %d to pool", worker.addr.as_string(), htons(worker.work_recv_port));
+						LOGINFO("Added convolve worker at address %s port %d to pool", worker.addr.as_string(), worker.work_recv_port.AsHostOrder());
 					}
 				}
 			}
@@ -433,7 +428,7 @@ namespace ion
 			{
 				uint64_t magic;
 				size_t bytes_read;
-				result = worker_it->sock.Recv((char*)&magic, sizeof(uint64_t), 1, NULL, NULL, &bytes_read);
+				result = worker_it->sock.RecvTimeout((char*)&magic, sizeof(uint64_t), 0, NULL, NULL, &bytes_read);
 				if (result.success())
 				{
 					//we got a reply from this worker
@@ -474,7 +469,7 @@ namespace ion
 	//		ion::StartThread(ConvolutionTasker<neuronWorker_t>, &task_data);
 	//	}
 	//}
-	ion::Error SendConvolutionWorkerAnnouncement(ion::UdpSocket socket, ion::IpAddress addr, uint16_t port, ConvolveWorkerAnnouncement_t announcement, ConvolveWorker_t& worker)
+	ion::Error SendConvolutionWorkerAnnouncement(ion::UdpSocket socket, ion::IpAddress addr, ion::IpPort port, ConvolveWorkerAnnouncement_t announcement, ConvolveWorker_t& worker)
 	{
 
 		ion::Error result = socket.SendTo((char*)&announcement, sizeof(ConvolveWorkerAnnouncement_t), addr, port);
@@ -483,12 +478,7 @@ namespace ion
 			LOGWARN("Failed to send worker announcement");
 			return result;
 		}
-		result = worker.sock.Create(announcement.recv_port, IpAddress((uint32_t)ADDR_ANY));
-		if (!result.success())
-		{
-			LOGWARN("Failed to create worker socket");
-			return result;
-		}
+		worker.sock.Create(ion::IpPort(announcement.recv_port,ion::IpPort::Order::HOST), IpAddress((uint32_t)ADDR_ANY));
 		result = worker.sock.Listen();
 		if (!result.success())
 		{
@@ -500,7 +490,7 @@ namespace ion
 	ion::Error GetConvolutionTask(ConvolveWorker_t& worker, ConvolveTask<neuronWorker_t>& task)
 	{
 		size_t bytes_read;
-		ion::Error result = worker.sock.Recv((char*)&task, sizeof(ConvolveTask<neuronWorker_t>), 1000, NULL, NULL, &bytes_read);
+		ion::Error result = worker.sock.RecvTimeout((char*)&task, sizeof(ConvolveTask<neuronWorker_t>), 1000, NULL, NULL, &bytes_read);
 		if (result == ion::Error::Get(ion::Error::TIMEOUT))
 		{
 			LOGWARN("Timeout occurred receiving task, going to reconnect");

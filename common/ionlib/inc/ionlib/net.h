@@ -20,6 +20,7 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #include "ionlib\ip_address.h"
 #include "ionlib\error.h"
 #include "ionlib\byteswap.h"
+#include "ionlib\iondef.h"
 namespace ion
 {
 	ion::Error InitSockets();
@@ -30,9 +31,9 @@ namespace ion
 		UdpSocket();
 		ion::Error Create();
 		void Close();
-		ion::Error Bind(uint16_t port);
-		ion::Error SendTo(const char* buf, uint32_t len, IpAddress address, uint16_t port);
-		ion::Error Recv(char* buf, uint32_t len, uint32_t timeout_msec, IpAddress* from_sddress, uint16_t* from_port);
+		ion::Error Bind(ion::IpPort port);
+		ion::Error SendTo(const byte_t* buf, uint32_t len, IpAddress address, ion::IpPort port);
+		ion::Error Recv(byte_t* buf, uint32_t len, uint32_t timeout_msec, IpAddress* from_sddress, ion::IpPort* from_port);
 	private:
 		SOCKET socket_handle_;
 	};
@@ -40,15 +41,18 @@ namespace ion
 	{
 	public:
 		TcpSocket();
-		ion::Error Create(uint16_t port, ion::IpAddress addr);
+		void Create(ion::IpPort port, ion::IpAddress addr);
 		ion::Error Connect();
+		ion::Error Accept();
 		ion::Error Listen();
 		void Close();
-		ion::Error Send(const char* buf, uint32_t len);
-		ion::Error Recv(char* buf, uint32_t buf_len, uint32_t timeout_msec, IpAddress* from_address, uint16_t* from_port, size_t* bytes_read);
+		ion::Error Send(const byte_t* buf, uint32_t len);
+		ion::Error RecvTimeout(byte_t* buf, uint32_t buf_len, uint32_t timeout_msec, IpAddress* from_address, uint16_t* from_port, size_t* bytes_read);
+		ion::Error Recv(byte_t* buf, uint32_t buf_len, IpAddress* from_address, uint16_t* from_port, size_t* bytes_read);
 	private:
 		SOCKADDR_IN sockaddr_;
-		SOCKET socket_handle_;
+		SOCKET listen_socket_handle_;
+		SOCKET connection_socket_handle_;
 	};
 } //namespace ion
 #endif //IONNET_H_

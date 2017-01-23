@@ -19,19 +19,21 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #include <VersionHelpers.h>
 namespace ion
 {
-	static double counter_frequency = 0.0;
+	static long long counter_frequency = 0LL;
 	static int64_t counter_origin = 0;
-	static double timer_origin = 0.0;
 	//will be called by backend if the user doesn't call it, you can call this manually if you care about the first measurement being as accurate as possible
 	void TimeInit()
 	{
 		LARGE_INTEGER frequency;
 		QueryPerformanceFrequency(&frequency);
-		counter_frequency = (double)(frequency.QuadPart) / 1000.0;
+		counter_frequency = frequency.QuadPart;
 		LARGE_INTEGER counter;
-		QueryPerformanceCounter(&counter);
+		BOOL result = 0;
+		while (result == 0)
+		{
+			result = QueryPerformanceCounter(&counter);
+		}
 		counter_origin = counter.QuadPart;
-		timer_origin = TimeGet();
 	}
 	//fast-query timer, may be the number of seconds since the program started
 	double TimeGet()
@@ -42,7 +44,10 @@ namespace ion
 		}
 		LARGE_INTEGER counter;
 		QueryPerformanceCounter(&counter);
-		return ((counter.QuadPart-counter_origin) / counter_frequency) - timer_origin;
+		long long time_microseconds = ((counter.QuadPart-counter_origin) * 1000000 / counter_frequency);
+		//report time in seconds
+		return time_microseconds / 1000000.0;
+
 	}
 	//gives time since January 1, 1970 at midnight
 	double TimeGetEpoch()

@@ -35,8 +35,7 @@ extern "C" {
 #include "ffwrapper\write.h"
 
 #define STREAM_PIX_FMT    AV_PIX_FMT_YUV420P /* default pix_fmt */
-#define STREAM_FRAME_RATE 25 /* 25 images/s */
-#define STREAM_DURATION   10.0
+#define STREAM_FRAME_RATE 5 /* 25 images/s */
 #define SCALE_FLAGS SWS_BICUBIC
 
 
@@ -444,6 +443,7 @@ namespace ion
 			* av_write_trailer() may try to use memory that was freed on
 			* av_codec_close(). */
 			av_write_trailer(impl->fmt_ctx_);
+			video_open_ = false;
 		}
 	}
 };
