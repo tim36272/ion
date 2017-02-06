@@ -25,8 +25,14 @@ namespace ion
 	class Mutex
 	{
 	public:
-		Mutex(bool init_locked = false);
-		Mutex(bool init_locked, const char* name);
+		Mutex(bool init_locked = false, const char* name = nullptr);
+		/* Lock the mutex
+		@param timeout	time to wait, in milliseconds, for the lock. Passing 0 causes the function to return immediately with or without lock
+		@return			ion::Error::ABANDONED	if a now dead processes/thread owned the lock. The state of the mutex is indeterminent
+						ion::Error::SUCCESS		The caller now has the mutex
+						ion::Error::TIMEOUT		The mutex was not acquired in time. The caller does not have the mutex.
+						ion::Error::UNKNOWN		Unknown error occurred, in Windows call GetLastError for details
+		*/
 		ion::Error Lock(uint32_t timeout = TIMEOUT_INFINITE);
 		ion::Error Unlock(); //timeout in milliseconds
 	private:

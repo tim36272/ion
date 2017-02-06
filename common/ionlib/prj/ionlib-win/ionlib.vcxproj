@@ -149,9 +149,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\ionlib\app_util.h" />
+    <ClInclude Include="..\..\inc\ionlib\ascii.h" />
     <ClInclude Include="..\..\inc\ionlib\backdoor.h" />
     <ClInclude Include="..\..\inc\ionlib\byteswap.h" />
     <ClInclude Include="..\..\inc\ionlib\config.h" />
+    <ClInclude Include="..\..\inc\ionlib\counter.h" />
     <ClInclude Include="..\..\inc\ionlib\data_pump.h" />
     <ClInclude Include="..\..\inc\ionlib\double_buffer.h" />
     <ClInclude Include="..\..\inc\ionlib\error.h" />

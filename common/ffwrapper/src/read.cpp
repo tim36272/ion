@@ -56,6 +56,9 @@ extern "C" {
 			AVPacket pkt;
 			SwsContext *sws_context_;
 			uint8_t* rgb_data_;
+
+			//debug
+			bool warned_about_non_video;
 		};
 
 		static int open_codec_context(int *stream_idx,
@@ -162,7 +165,11 @@ extern "C" {
 				}
 			} else
 			{
-				LOGDEBUG("Got non-video packet");
+				if (!impl->warned_about_non_video)
+				{
+					LOGDEBUG("This stream has non-video packets. This will be the only warning.");
+					impl->warned_about_non_video = true;
+				}
 			}
 
 			return decoded;

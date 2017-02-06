@@ -27,14 +27,7 @@ namespace ion
 	public:
 		Timer()
 		{
-			count_ = 0ULL;
-			sum_ = 0.0;
-			start_ = 0.0;
-			sum_sq_ = 0.0;
-			last_ = 0.0;
-			min_ = DBL_MAX;
-			max_ = -DBL_MAX;
-			timer_running_ = false;
+			Reset();
 		}
 		void Begin()
 		{
@@ -91,6 +84,21 @@ namespace ion
 		double GetMax()
 		{
 			return max_;
+		}
+		double GetStart()
+		{
+			return start_;
+		}
+		void Reset()
+		{
+			count_ = 0ULL;
+			sum_ = 0.0;
+			start_ = 0.0;
+			sum_sq_ = 0.0;
+			last_ = 0.0;
+			min_ = DBL_MAX;
+			max_ = -DBL_MAX;
+			timer_running_ = false;
 		}
 	private:
 		double sum_;

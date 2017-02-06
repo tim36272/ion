@@ -17,7 +17,6 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #ifndef ION_ERROR_H_
 #define ION_ERROR_H_
 #include <string>
-#include <set>
 namespace ion
 {
 	class Error

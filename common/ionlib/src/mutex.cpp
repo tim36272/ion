@@ -24,12 +24,6 @@ struct mutex_t
 };
 namespace ion
 {
-	ion::Mutex::Mutex(bool init_locked)
-	{
-		mutex_handle_ = (mutex_t*)malloc(sizeof(mutex_t));
-		mutex_handle_->mutex = CreateMutex(NULL, init_locked, NULL);
-	}
-
 	ion::Mutex::Mutex(bool init_locked, const char* name)
 	{
 		mutex_handle_ = (mutex_t*)malloc(sizeof(mutex_t));
@@ -52,14 +46,9 @@ namespace ion
 	ion::Error ion::Mutex::Lock(uint32_t timeout)
 	{
 		LOGASSERT(mutex_handle_->mutex != NULL);
+		static_assert(INFINITE == TIMEOUT_INFINITE, "INFINITE and TIMEOUT_INFINITE are declared different on your platform");//this is OS-dependent but will always be true on Windows
 		DWORD result;
-		if (timeout == TIMEOUT_INFINITE)
-		{
-			result = WaitForSingleObject(mutex_handle_->mutex, INFINITE);
-		} else
-		{
-			result = WaitForSingleObject(mutex_handle_->mutex, timeout);
-		}
+		result = WaitForSingleObject(mutex_handle_->mutex, timeout);
 		switch (result)
 		{
 			case WAIT_ABANDONED:

@@ -16,8 +16,12 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef ION_BACKDOOR_H_
 #define ION_BACKDOOR_H_
+#include <vector>
+#include <deque>
+#include <string>
 #include "ionlib\ip_address.h"
 #include "ionlib\net.h"
+#include "ionlib\mutex.h"
 extern "C" {
 	struct telnet_t;
 	union telnet_event_t;
@@ -28,6 +32,33 @@ namespace ion
 	{
 	public:
 		Backdoor(IpPort port);
+		void printf(std::string fmt, ...);
+		void newline();
+		typedef void(*BackdoorCmdCb)(Backdoor* backdoor, std::string args, void* usr_data);
+		void AddCommand(std::string name, std::string help_text, BackdoorCmdCb callback, void* usr_data);
+		enum class Color
+		{
+			BLACK,
+			RED,
+			GREEN,
+			YELLOW,
+			BLUE,
+			MAGENTA,
+			CYAN,
+			WHITE
+		};
+		void SetColor(Color color);
+		void SetBgColor(Color color);
+		void SetColorHeader();
+		void SetColorNormal();
+		void SetCursor(uint32_t line, uint32_t col);
+		void ClearScreen();
+		bool IsCommandInProgress();
+		void FinishCommandHandler();
+		void AddToInputBuffer(const char* buffer, size_t length);
+		char GetInput();
+		void ClearInputBuffer();
+		bool IsConnected();
 	private:
 		IpPort port_;
 		void Init();
@@ -36,10 +67,25 @@ namespace ion
 		friend void _online(const char *line, ion::Backdoor *ud);
 		void Run();
 		ion::TcpSocket socket_;
+		bool connected_;
 		telnet_t* telnet_;
-		void _input(const char *buffer, size_t size);
+		void ProcessCommand(const char *buffer, size_t size);
 		char linebuf[256];
 		int linepos;
+		//this mutex is locked when a callback is in progress, which generally indicates a free-running
+		//	backdoor function is running and thus the input should be directed to that function
+
+		struct BackdoorCmd
+		{
+			std::string name;
+			std::string help_text;
+			BackdoorCmdCb callback;
+			void* usr_data;
+		};
+		std::vector<BackdoorCmd> commands_;
+		friend void cb_help(Backdoor* backdoor, std::string args, void* usr_data);
+		bool command_in_progress_;
+		std::deque<char> input_buffer_; //used when a command is in progress so it can get new input
 
 	};
 };

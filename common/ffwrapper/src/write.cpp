@@ -35,7 +35,7 @@ extern "C" {
 #include "ffwrapper\write.h"
 
 #define STREAM_PIX_FMT    AV_PIX_FMT_YUV420P /* default pix_fmt */
-#define STREAM_FRAME_RATE 5 /* 25 images/s */
+#define STREAM_FRAME_RATE 25 /* 25 images/s */
 #define SCALE_FLAGS SWS_BICUBIC
 
 

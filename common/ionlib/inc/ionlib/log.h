@@ -17,16 +17,17 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #ifndef ION_LOG_H_
 #define ION_LOG_H_
 #include <stdint.h>
-#include <stdlib.h>
 #include <fstream>
-#include "app_util.h"
+#include "ionlib\app_util.h"
 
 #define IONLOG_MAX_MESSAGE_LENGTH 512
 
 namespace ion
 {
+	class Backdoor;
 	//define macros for debug, info, warn, error, and fatal types
 	bool LogInit(const char* log_file_name);
+	void LogAddBackdoor(ion::Backdoor* backdoor);
 	void LogPrintf(const char* file, uint32_t line, char* format, ...);
 	void LogClose();
 	void LogFlush();
@@ -41,7 +42,7 @@ ion::LogPrintf(__FILE__, __LINE__, "FATAL: " ## __VA_ARGS__);\
 ion::AppFail(-1);\
 }
 
-	//Assert that a condition is true and halt the program if not
+//Assert that a condition is true and halt the program if not
 #define LOGASSERT(b,...) {\
   if(!(b)) {\
   LOGFATAL("Assertion failed: "#b" INFO: "##__VA_ARGS__);\
