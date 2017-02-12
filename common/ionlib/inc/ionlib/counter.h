@@ -16,8 +16,10 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef ION_COUNTER_H_
 #define ION_COUNTER_H_
+#include "ionlib\iondef.h"
 #include <limits>
 #include <stdint.h>
+
 namespace ion
 {
 	template <class T>

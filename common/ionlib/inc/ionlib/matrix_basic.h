@@ -143,8 +143,31 @@ namespace ion
 		user_id = rhs.user_id;
 		data_is_caller_provided_ = false;
 	}
+	//I don't technically need to call std::move on everything, however I am told it is good practice. Not sure how much
+	//	I trust that source (the internet). For the sake of learning I'm going to call it here.
+	template<class T>
+	inline Matrix<T>::Matrix(Matrix && rhs) : user_id(std::move(rhs.user_id)),
+													rows_(std::move(rhs.rows_)),
+													cols_(std::move(rhs.cols_)),
+													pages_(std::move(rhs.pages_)),
+													allocated_cells_(std::move(rhs.allocated_cells_)),
+													roi_row_origin_(std::move(rhs.roi_row_origin_)),
+													roi_col_origin_(std::move(rhs.roi_col_origin_)),
+													roi_page_origin_(std::move(rhs.roi_page_origin_)),
+													allocated_rows_(std::move(rhs.allocated_rows_)),
+													allocated_cols_(std::move(rhs.allocated_cols_)),
+													allocated_pages_(std::move(rhs.allocated_pages_)),
+													contiguous_(std::move(rhs.contiguous_)),
+													is_roi_(std::move(rhs.is_roi_)),
+													data_(std::move(rhs.data_)),
+													format_(std::move(rhs.format_)),
+													data_is_caller_provided_(std::move(rhs.data_is_caller_provided_))
+	{
+		//invalidate the rhs data
+		rhs.data_ = nullptr;
+	}
 	template <class T>
-	ion::Matrix<T> ion::Matrix<T>::operator=(const ion::Matrix<T>& rhs)
+	ion::Matrix<T>& ion::Matrix<T>::operator=(const ion::Matrix<T>& rhs)
 	{
 
 		LOGASSERT(this != &rhs);

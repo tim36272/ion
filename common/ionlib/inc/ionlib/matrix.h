@@ -22,8 +22,6 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 #include <iostream>
 #include <limits>
-#include "ionlib/queue.h"
-#include "ionlib/net.h"
 #ifdef OPENCV_CORE_HPP
 #include "opencv2/imgproc.hpp"
 #endif //#ifdef OPENCV_CORE_HPP
@@ -55,10 +53,10 @@ namespace ion
 	public:
 		//basic
 		Matrix(uint32_t rows, uint32_t cols = 1, uint32_t pages = 1, T* data = nullptr);
-		Matrix(ion::TcpSocket& sock, bool receive_data);
 		~Matrix();
 		Matrix(const Matrix& rhs);
-		Matrix operator=(const Matrix& rhs);
+		Matrix(Matrix&& rhs);
+		Matrix& operator=(const Matrix& rhs);
 		void Resize(uint32_t rows, uint32_t cols = 1, uint32_t pages = 1);
 		void DeepCopyTo(Matrix& rhs) const;
 		Matrix DeepCopy() const;
@@ -102,9 +100,6 @@ namespace ion
 		void SetPrintFmt(PrintFmt format);
 		PrintFmt GetPrintFmt() const;
 		void Fread(FILE* fin, size_t num_elements);
-		bool SendToSocket(ion::TcpSocket& sock) const;
-		bool SendToSocketNoData(ion::TcpSocket& sock) const;
-		bool RecvFromSocket(ion::TcpSocket& sock);
 		void Memcpy(T* dest) const; //memcpy from data_ to dest
 		//arithmetic
 		void ElementwiseMultiply(const Matrix<T>& multiplier, Matrix<T>* result) const;
@@ -214,56 +209,6 @@ namespace ion
 	template <class T>
 	ion::Matrix<T> Linspace(T min, T max);
 	
-#define CONVOLVE_TASK_MAGIC       (0x0123456789ABCDEF)
-#define CONVOLVE_TASK_REPLY_MAGIC (0xFEDCBA9876543210)
-	typedef float neuronWorker_t;
-	template <class T>
-	struct ConvolveTask
-	{
-		static const uint64_t magic = CONVOLVE_TASK_MAGIC;
-		//The operation to be performed is: for each image: for each kernel: convolve image with kernel and store the result to result[image_index][kernel_index]
-		uint32_t num_inputs;
-		uint32_t num_kernels;
-		std::vector<ion::Matrix<T>>* input; //an array of num_input matrices
-		std::vector<ion::Matrix<T>>* kernel;//an array of num_kernels matrices
-		std::vector<std::vector<ion::Matrix<T>>>* result; //an array of num_inputs x num_kernels matrices 
-		typename ion::Matrix<T>::ConvFlag flags; //flags to use during the convolution
-	};
-	template <class T>
-	struct ConvolutionTaskerData
-	{
-		ConvolutionTaskerData()
-		{
-		}
-		ion::Queue<ConvolveTask<T>> task_queue;
-		ion::Queue<ConvolveTask<T>> result_queue;
-		uint16_t announcement_port; //network byte order
-	};
-	//This will spawn num_threads threads which will wait on convolution operations in task_queue and process them
-	template <class T>
-	void InitConvolutionTasker(uint32_t num_threads, ConvolutionTaskerData<T>& task_data);
-
-	template <class T>
-	void PushConvolutionTask(ConvolutionTaskerData<T>& tasker, ConvolveTask<T>& task);
-
-	template <class T>
-	void JoinConvolveTasks(ConvolutionTaskerData<T>& tasker);
-
-	struct ConvolveWorkerAnnouncement_t
-	{
-		uint16_t recv_port; //network byte order
-	};
-	struct ConvolveWorker_t
-	{
-		ion::IpPort work_recv_port; //receives work on this port
-		ion::IpAddress addr; //used to disambiguate workers
-		ion::TcpSocket sock;
-		ConvolveTask<neuronWorker_t> current_task;
-	};
-	ion::Error SendConvolutionWorkerAnnouncement(ion::UdpSocket socket, ion::IpAddress addr, uint16_t port, ConvolveWorkerAnnouncement_t announcement, ConvolveWorker_t& worker);
-	ion::Error GetConvolutionTask(ConvolveWorker_t& worker, ConvolveTask<neuronWorker_t>& task);
-	ion::Error SendConvolutionTaskResult(ConvolveWorker_t& worker);
-
 	uint64_t GetMatrixAllocations();
 	uint64_t GetMatrixDeletions();
 }; //namespace ion
