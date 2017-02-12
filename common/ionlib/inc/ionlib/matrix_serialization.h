@@ -119,7 +119,11 @@ namespace ion
 	{
 		//this isn't strictly required but is easier so I'll enforce continuous until I need otherwise
 		LOGASSERT(contiguous_);
+#ifdef _WIN32
 		fread_s(data_ + MAT_INDEX(*this, 0, 0, 0), NumCells() * sizeof(T), sizeof(T), num_elements, fin);
+#else
+		fread(data_ + MAT_INDEX(*this, 0, 0, 0), sizeof(T), num_elements, fin);
+#endif
 	}
 	template <class T>
 	void ion::Matrix<T>::Memcpy(T* dest) const

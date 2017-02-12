@@ -17,10 +17,10 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #ifndef ION_NET_H_
 #define ION_NET_H_
 #include <WinSock2.h>
-#include "ionlib\ip_address.h"
-#include "ionlib\error.h"
-#include "ionlib\byteswap.h"
-#include "ionlib\iondef.h"
+#include "ionlib/ip_address.h"
+#include "ionlib/error.h"
+#include "ionlib/byteswap.h"
+#include "ionlib/iondef.h"
 namespace ion
 {
 	ion::Error InitSockets();

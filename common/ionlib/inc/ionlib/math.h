@@ -16,6 +16,7 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef ION_MATH_H_
 #define ION_MATH_H_
+#include <cmath>
 namespace ion
 {
 #ifndef PI
@@ -41,12 +42,12 @@ namespace ion
 	template <class T>
 	inline T Add(T left, T right)
 	{
-		return left + right;
+		return static_cast<T>(left + right);
 	}
 	template <class T>
 	inline T Subtract(T left, T right)
 	{
-		return left - right;
+		return static_cast<T>(left - right);
 	}
 	template <class T>
 	inline T SubtractSwap(T left, T right)
@@ -56,7 +57,7 @@ namespace ion
 	template <class T>
 	inline T Multiply(T left, T right)
 	{
-		return left * right;
+		return static_cast<T>(left * right);
 	}
 	template <class T>
 	inline T Divide(T left, T right)
@@ -102,8 +103,8 @@ namespace ion
 	template <class T>
 	inline T derivative_tanh(T in)
 	{
-		float temp = std::tanhf(static_cast<float>(in);
-		return static_cast<T>(1.0 - temp*temp));
+		float temp = static_cast<float>(std::tanh(static_cast<double>(in)));
+		return static_cast<T>(1.0 - temp*temp);
 	}
 	template <class T>
 	inline bool Equal(T lhs, T rhs)

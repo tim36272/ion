@@ -14,12 +14,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
-#include "ionlib\app_util.h"
-#include "ionlib\log.h"
-#include "ionlib\net.h"
+#include "ionlib/app_util.h"
+#include "ionlib/log.h"
+#ifdef _WIN32
 #include <intrin.h>
-#include <stdio.h>
 #include <windows.h>
+#endif //_WIN32
+#include <stdio.h>
 namespace ion
 {
 	bool AppInit(const char* log_file_name)
@@ -42,10 +43,10 @@ namespace ion
 		LogFlush();
 		fflush(stdout);
 		fflush(stderr);
-#ifndef NDEBUG
+#if !defined(NDEBUG) && defined(_WIN32)
 		__debugbreak();
 #else
-		quit(result);
+		exit(result);
 #endif
 	}
 	void AppWeakFail(int32_t result)
@@ -54,19 +55,27 @@ namespace ion
 		fflush(stdout);
 		fflush(stderr);
 		//check if the debugger is present
+#ifdef _WIN32
 		if (IsDebuggerPresent())
 		{
 			__debugbreak();
 		} else
 		{
+#endif //_WIN32
 			//continue
 			LOGINFO("Program is continuing because the debugger is not attached");
+#ifdef _WIN32
 		}
+#endif //_WIN32
 	}
 	void AppSetStrictFloatingPointRules(void)
 	{
+#ifdef _WIN32
 		unsigned int fp_control_state;
 		(void)_controlfp_s(&fp_control_state, 0, 0);
 		(void)_controlfp_s(&fp_control_state, _EM_INEXACT | _EM_UNDERFLOW, _MCW_EM);
+#else //_WIN32
+		LOGFATAL("Not supported on this architecture");
+#endif //_WIN32
 	}
 } //namespace ion

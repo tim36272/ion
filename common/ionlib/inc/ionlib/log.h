@@ -18,7 +18,8 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #define ION_LOG_H_
 #include <stdint.h>
 #include <fstream>
-#include "ionlib\app_util.h"
+#include <iostream>
+#include "ionlib/app_util.h"
 
 #define IONLOG_MAX_MESSAGE_LENGTH 512
 
@@ -32,27 +33,27 @@ namespace ion
 	void LogClose();
 	void LogFlush();
 
-#define LOGDEBUG(...) ion::LogPrintf(__FILE__, __LINE__, "DEBUG: " ## __VA_ARGS__)
-#define LOGINFO(...)  ion::LogPrintf(__FILE__, __LINE__, "INFO: " ## __VA_ARGS__)
-#define LOGWARN(...)  ion::LogPrintf(__FILE__, __LINE__, "WARN: " ## __VA_ARGS__)
-#define LOGERROR(...) ion::LogPrintf(__FILE__, __LINE__, "ERROR: " ## __VA_ARGS__)
+#define LOGDEBUG(...) ion::LogPrintf(__FILE__, __LINE__, "DEBUG: " __VA_ARGS__)
+#define LOGINFO(...)  ion::LogPrintf(__FILE__, __LINE__, "INFO: " __VA_ARGS__)
+#define LOGWARN(...)  ion::LogPrintf(__FILE__, __LINE__, "WARN: " __VA_ARGS__)
+#define LOGERROR(...) ion::LogPrintf(__FILE__, __LINE__, "ERROR: " __VA_ARGS__)
 
 #define LOGFATAL(...) {\
-ion::LogPrintf(__FILE__, __LINE__, "FATAL: " ## __VA_ARGS__);\
+ion::LogPrintf(__FILE__, __LINE__, "FATAL: " __VA_ARGS__);\
 ion::AppFail(-1);\
 }
 
 //Assert that a condition is true and halt the program if not
 #define LOGASSERT(b,...) {\
   if(!(b)) {\
-  LOGFATAL("Assertion failed: "#b" INFO: "##__VA_ARGS__);\
+  LOGFATAL("Assertion failed: "#b" INFO: " __VA_ARGS__);\
   }\
 }
 
 //Assert that a condition is true and print a message, then if the debugger is attached set a breakpoint, otherwise continue running
 #define LOGWEAKASSERT(b,...) {\
   if(!(b)) {\
-  ion::LogPrintf(__FILE__,__LINE__,"Weak assertion failed: "#b" INFO: "##__VA_ARGS__);\
+  ion::LogPrintf(__FILE__,__LINE__,"Weak assertion failed: "#b" INFO: " __VA_ARGS__);\
   ion::AppWeakFail(-1);\
   }\
 }
@@ -63,7 +64,7 @@ ion::AppFail(-1);\
 #else
 #define LOGSANITY(b,...) {\
   if(!(b)) {\
-  LOGFATAL("Sanity check failed: "#b" INFO: "##__VA_ARGS__);\
+  LOGFATAL("Sanity check failed: "#b" INFO: " __VA_ARGS__);\
   }\
 }
 #endif

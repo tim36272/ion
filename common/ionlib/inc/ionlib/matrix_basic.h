@@ -16,6 +16,8 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
 #include "ionlib/matrix.h"
 #include "ionlib/math.h"
+#include <cmath>
+#include <memory.h>
 namespace ion
 {
 	static uint64_t allocations_g = 0;
@@ -92,7 +94,7 @@ namespace ion
 		LOGWEAKASSERT(allocations_g >= deletions_g, "Allocations: %llu, Deletions: %llu", allocations_g, deletions_g);
 	}
 	template <class T>
-	ion::Matrix<T>::Matrix(uint32_t rows, uint32_t cols = 1, uint32_t pages = 1, T* data = nullptr)
+	ion::Matrix<T>::Matrix(uint32_t rows, uint32_t cols, uint32_t pages, T* data)
 	{
 		Construct(rows, cols, pages, data);
 	}
@@ -204,7 +206,7 @@ namespace ion
 	}
 	//////////////////////////////////////////////////// Elementry Operations
 	template <class T>
-	void ion::Matrix<T>::Resize(uint32_t rows, uint32_t cols = 1, uint32_t pages = 1)
+	void ion::Matrix<T>::Resize(uint32_t rows, uint32_t cols, uint32_t pages)
 	{
 		//it doesn't make sense to resize an ROI (just get a new one)
 		LOGASSERT(!is_roi_ && !data_is_caller_provided_);
@@ -398,7 +400,7 @@ namespace ion
 		}
 	}
 	template <class T>
-	void ion::Matrix<T>::Reshape(uint32_t new_rows, uint32_t new_cols = 1, uint32_t new_pages = 1)
+	void ion::Matrix<T>::Reshape(uint32_t new_rows, uint32_t new_cols, uint32_t new_pages)
 	{
 		//note that old_size is not necessarily equal to allocated_cells_ because the matrix could be a 3x3 allocated in 4x4 cells, for example
 		uint64_t old_size = (uint64_t)rows_ * (uint64_t)cols_* (uint64_t)pages_;
@@ -447,16 +449,16 @@ namespace ion
 		}
 	}
 	template <class T>
-	T& ion::Matrix<T>::At(uint32_t x, uint32_t y = 0, uint32_t z = 0)
+	T& ion::Matrix<T>::At(uint32_t x, uint32_t y, uint32_t z)
 	{
 		//this function is ROI-safe
 		return data_[MAT_INDEX(*this, x, y, z)];
 	}
 	template <class T>
-	const T& ion::Matrix<T>::At(uint32_t x, uint32_t y = 0, uint32_t z = 0) const
+	const T& ion::Matrix<T>::At(uint32_t x, uint32_t y, uint32_t z) const
 	{
 		//Since the const version of this function is being called it must be that we are going to read that value, not set it. So do a sanity check that the values is good
-		LOGSANITY(!isnan((double)data_[MAT_INDEX(*this, x, y, z)]));
+		LOGSANITY(!std::isnan(static_cast<double>(data_[MAT_INDEX(*this, x, y, z)])));
 		//this function is ROI-safe
 		return data_[MAT_INDEX(*this, x, y, z)];
 	}
@@ -665,7 +667,7 @@ namespace ion
 		return pages_;
 	}
 	template <class T>
-	void ion::Matrix<T>::Set(T val, uint32_t x, uint32_t y = 0, uint32_t z = 0)
+	void ion::Matrix<T>::Set(T val, uint32_t x, uint32_t y, uint32_t z)
 	{
 		//this function is ROI-safe
 		At(x, y, z) = val;
@@ -796,7 +798,7 @@ namespace ion
 			{
 				for (uint32_t page = 0; page < pages_; ++page)
 				{
-					LOGASSERT(!isnan((double)At(row, col, page)), "(%u,%u,%u)",row,col,page);
+					LOGASSERT(!std::isnan((double)At(row, col, page)), "(%u,%u,%u)",row,col,page);
 				}
 			}
 		}

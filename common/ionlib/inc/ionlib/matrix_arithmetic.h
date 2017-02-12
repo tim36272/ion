@@ -16,9 +16,33 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
 #include "ionlib/matrix.h"
 #include "ionlib/math.h"
-#include <smmintrin.h>
+#include <math.h>
 namespace ion
 {
+	template <class T>
+	T Max(T lhs, T rhs)
+	{
+		return (lhs > rhs) ? lhs : rhs;
+	}
+	template <class T>
+	T ion::Matrix<T>::Max() const
+	{
+		T result = std::numeric_limits<T>::lowest();
+		Foreach(&ion::Max, &result);
+		return result;
+	}
+	template <class T>
+	T ion::Matrix<T>::Mean() const
+	{
+		return Sum() / static_cast<T>(rows_ * cols_ * pages_);
+	}
+	template <class T>
+	ion::Matrix<T> ion::Matrix<T>::Log() const
+	{
+		ion::Matrix<T> result(rows_, cols_, pages_);
+		Foreach(&ion::LogPerturb, &result);
+		return result;
+	}
 	template <class T>
 	T ion::Matrix<T>::Sum() const
 	{
@@ -30,18 +54,20 @@ namespace ion
 				for (uint32_t page = 0; page < this->pages_; ++page)
 				{
 					//this does not use ion::Matrix::At for performance reasons
-					sum += data_[MAT_INDEX(*this,row, col, page)];
+					sum = static_cast<T>(sum + data_[MAT_INDEX(*this,row, col, page)]);
 				}
 			}
 		}
 		return sum;
 	}
+	template <>
 	ion::Matrix<float> ion::Matrix<float>::Abs() const
 	{
 		ion::Matrix<float> result(rows_, cols_, pages_);
-		Foreach(&std::fabsf, &result);
+		Foreach(&fabsf, &result);
 		return result;
 	}
+	template <>
 	ion::Matrix<double> ion::Matrix<double>::Abs() const
 	{
 		ion::Matrix<double> result(rows_, cols_, pages_);
@@ -167,7 +193,7 @@ namespace ion
 					multiplier_idx = MAT_INDEX(multiplier, row, col, page);
 					result_idx = MAT_INDEX(*result, row, col, page);
 					//this does not use ion::Matrix::At for performance reasons
-					result->data_[result_idx] = data_[this_idx] * multiplier.data_[multiplier_idx];
+					result->data_[result_idx] = static_cast<T>(data_[this_idx] * multiplier.data_[multiplier_idx]);
 				}
 			}
 		}
@@ -192,7 +218,7 @@ namespace ion
 					multiplier_idx = MAT_INDEX(multiplier, rows_ - row - 1, cols_ - col - 1, pages_ - page - 1);
 					result_idx = MAT_INDEX(*result, row, col, page);
 					//this does not use ion::Matrix::At for performance reasons
-					result->data_[result_idx] = data_[this_idx] * multiplier.data_[multiplier_idx];
+					result->data_[result_idx] = static_cast<T>(data_[this_idx] * multiplier.data_[multiplier_idx]);
 				}
 			}
 		}
@@ -218,7 +244,7 @@ namespace ion
 					this_idx = MAT_INDEX(*this, row, col, page);
 					multiplier_idx = MAT_INDEX(multiplier, row, col, page);
 					//this does not use ion::Matrix::At for performance reasons
-					sum += data_[this_idx] * multiplier.data_[multiplier_idx];
+					sum = static_cast<T>(sum + data_[this_idx] * multiplier.data_[multiplier_idx]);
 				}
 			}
 		}
@@ -243,7 +269,7 @@ namespace ion
 			for (uint32_t col = 0; col < cols_; ++col)
 			{
 				//this does not use ion::Matrix::At for performance reasons
-				sum += data_[this_idx+col] * multiplier.data_[multiplier_idx+col];
+				sum = static_cast<T>(sum + data_[this_idx+col] * multiplier.data_[multiplier_idx+col]);
 			}
 		}
 		return sum;
@@ -254,30 +280,11 @@ namespace ion
 		LOGFATAL("Not implemented %u", multiplier.user_id);
 		return static_cast<T>(0);
 	}
+	template <>
 	float ion::Matrix<float>::ElementwiseMultiplyRotatedWithSumFastSSE3x3(const Matrix<float>& multiplier)
 	{
-		//matrices must be the same shape
-		//This function is ROI-safe
-		//This uses LOGSANITY instead of LOGASSERT because -Fast functions are not allowed to do bounds checking in release mode
-		LOGSANITY(rows_ == multiplier.rows_ && rows_ == 3);
-		LOGSANITY(cols_ == multiplier.cols_ && cols_ == 3);
-		LOGSANITY(pages_ == multiplier.pages_ && pages_ == 1); //I haven't yet figured out how to do this on 3D data with SSE
-		size_t multiplicand_idx, multiplier_idx;
-		//This does not use Foreach for performance reasons
 		float sum = 0.0f;
-		for (uint32_t row = 0; row < rows_; ++row)
-		{
-			multiplicand_idx = MAT_INDEX(*this, row, 0, 0);
-			multiplier_idx = MAT_INDEX(multiplier, rows_ - row - 1, 0, 0);
-			__m128* sse_multiplier = (__m128*)&multiplier.data_[multiplier_idx];
-			__m128* sse_multiplicand = (__m128*)&data_[multiplicand_idx];
-			//memcpy(sse_multiplier.m128_f32, &data_[multiplicand_idx], 3 * sizeof(float));
-			//sse_multiplicand.m128_f32[2] = multiplier.data_[multiplier_idx];
-			//sse_multiplicand.m128_f32[1] = multiplier.data_[multiplier_idx + 1];
-			//sse_multiplicand.m128_f32[0] = multiplier.data_[multiplier_idx + 2];
-			__m128 res = _mm_dp_ps(*sse_multiplier, *sse_multiplicand, 0x71);
-			sum += res.m128_f32[0];
-		}
+		LOGFATAL("Not implemented");
 		return sum;
 	}
 	template <class T>
@@ -286,31 +293,11 @@ namespace ion
 		LOGFATAL("Not implemented %u", multiplier.user_id);
 		return static_cast<T>(0);
 	}
+	template <>
 	float ion::Matrix<float>::ElementwiseMultiplyRotatedWithSumFastSSE5x5(const Matrix<float>& multiplier)
 	{
-		//matrices must be the same shape
-		//This function is ROI-safe
-		//This uses LOGSANITY instead of LOGASSERT because -Fast functions are not allowed to do bounds checking in release mode
-		LOGSANITY(rows_ == multiplier.rows_ && rows_ == 5);
-		LOGSANITY(cols_ == multiplier.cols_ && cols_ == 5);
-		LOGSANITY(pages_ == multiplier.pages_ && pages_ == 1); //I haven't yet figured out how to do this on 3D data with SSE
-		size_t multiplicand_idx, multiplier_idx;
-		//This does not use Foreach for performance reasons
-		float sum = 0.0f;
-		for (uint32_t row = 0; row < rows_; ++row)
-		{
-			multiplicand_idx = MAT_INDEX(*this, row, 0, 0);
-			multiplier_idx = MAT_INDEX(multiplier, row, 0, 0);
-			__m128* sse_multiplier = (__m128*)&multiplier.data_[multiplier_idx];
-			__m128* sse_multiplicand = (__m128*)&data_[multiplicand_idx];
-			//memcpy(sse_multiplier.m128_f32, &data_[multiplicand_idx], 3 * sizeof(float));
-			//sse_multiplicand.m128_f32[2] = multiplier.data_[multiplier_idx];
-			//sse_multiplicand.m128_f32[1] = multiplier.data_[multiplier_idx + 1];
-			//sse_multiplicand.m128_f32[0] = multiplier.data_[multiplier_idx + 2];
-			__m128 res = _mm_dp_ps(*sse_multiplier, *sse_multiplicand, 0xF1);
-			sum += res.m128_f32[0] + multiplier.data_[multiplicand_idx+4] * data_[multiplicand_idx+4];
-		}
-		return sum;
+		LOGFATAL("Not implemented %u", multiplier.user_id);
+		return 0.0f;
 	}
 	template <class T>
 	ion::Matrix<T> operator+(const ion::Matrix<T>& lhs, const ion::Matrix<T>& rhs)
@@ -351,7 +338,7 @@ namespace ion
 					uint32_t right_page_index = 0;
 					for (uint32_t page_index = 0; page_index < result_pages; ++page_index)
 					{
-						result.At(row_index, col_index, page_index) = lhs.At(left_row_index, left_col_index, left_page_index) + rhs.At(right_row_index, right_col_index, right_page_index);
+						result.At(row_index, col_index, page_index) = static_cast<T>(lhs.At(left_row_index, left_col_index, left_page_index) + rhs.At(right_row_index, right_col_index, right_page_index));
 						left_page_index += left_page_step;
 						right_page_index += right_page_step;
 					}
@@ -406,7 +393,7 @@ namespace ion
 				for (k = 0; k < rhs.rows_; k++)
 				{
 
-					sum = sum + lhs.data_[MAT_INDEX(lhs,c,k,0)] * rhs.data_[MAT_INDEX(rhs,k,d,0)];
+					sum = static_cast<T>(sum + lhs.data_[MAT_INDEX(lhs,c,k,0)] * rhs.data_[MAT_INDEX(rhs,k,d,0)]);
 				}
 
 				result.data_[MAT_INDEX(result,c,d,0)] = sum;
@@ -448,7 +435,7 @@ namespace ion
 		{
 			for (uint32_t index = 0; index < rhs.allocated_cells_; ++index)
 			{
-				result += rhs.data_[MAT_INDEX(rhs,0,0,0) + index] * data_[(*this, 0, 0, 0) + index];
+				result = static_cast<T>(result + rhs.data_[MAT_INDEX(rhs,0,0,0) + index] * data_[MAT_INDEX(*this, 0, 0, 0) + index]);
 			}
 		} else
 		{
@@ -481,7 +468,7 @@ namespace ion
 			uint32_t rhs_row = 0, rhs_col = 0, rhs_page = 0;
 			for (uint32_t index = 0; index < elements_in_vector; ++index)
 			{
-				result += At(row, col, page) * rhs.At(rhs_row, rhs_col, rhs_page);
+				result = static_cast<T>(result + At(row, col, page) * rhs.At(rhs_row, rhs_col, rhs_page));
 				row += row_step;
 				col += col_step;
 				page += page_step;
@@ -533,30 +520,6 @@ namespace ion
 		LOGASSERT(pages_ == 1);
 		LOGFATAL("Not yet implemented");
 		T result = static_cast<T>(0);
-		return result;
-	}
-	template <class T>
-	T Max(T lhs, T rhs)
-	{
-		return (lhs > rhs) ? lhs : rhs;
-	}
-	template <class T>
-	T ion::Matrix<T>::Max() const
-	{
-		T result = std::numeric_limits<T>::lowest();
-		Foreach(&ion::Max, &result);
-		return result;
-	}
-	template <class T>
-	T ion::Matrix<T>::Mean() const
-	{
-		return Sum() / static_cast<T>(rows_ * cols_ * pages_);
-	}
-	template <class T>
-	ion::Matrix<T> ion::Matrix<T>::Log() const
-	{
-		ion::Matrix<T> result(rows_, cols_, pages_);
-		Foreach(&ion::LogPerturb, &result);
 		return result;
 	}
 	//computes argmax by flattening the array first

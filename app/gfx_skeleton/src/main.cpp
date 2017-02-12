@@ -1,8 +1,8 @@
-#include "ionlib\log.h"
-#include "ionlib\net.h"
-#include "iongfxlib\gfx.h"
-#include "iongfxlib\gfx_private.h"
-#include "iongfxlib\gfx_opengl.h"
+#include "ionlib/log.h"
+#include "ionlib/net.h"
+#include "iongfxlib/gfx.h"
+#include "iongfxlib/gfx_private.h"
+#include "iongfxlib/gfx_opengl.h"
 #include <gl/GL.h>
 #include <gl/GLU.h>
 int main(int argc, char* argv[])

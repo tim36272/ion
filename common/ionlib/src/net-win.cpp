@@ -14,9 +14,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
-#include "ionlib\net.h"
+#include "ionlib/net.h"
 #include <WinSock2.h>
-#include "ionlib\log.h"
+#include "ionlib/log.h"
 #include <stdint.h>
 #include <stdio.h>
 namespace ion

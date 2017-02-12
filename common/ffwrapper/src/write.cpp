@@ -1,4 +1,3 @@
-#include "..\inc\ffwrapper\write.h"
 /*
 This file is part of Ionlib.  Copyright (C) 2016  Tim Sweet
 
@@ -32,7 +31,7 @@ extern "C" {
 } //extern "C" {
 #endif
 
-#include "ffwrapper\write.h"
+#include "ffwrapper/write.h"
 
 #define STREAM_PIX_FMT    AV_PIX_FMT_YUV420P /* default pix_fmt */
 #define STREAM_FRAME_RATE 25 /* 25 images/s */

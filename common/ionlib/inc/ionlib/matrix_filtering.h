@@ -93,9 +93,9 @@ namespace ion
 								uint32_t reverse_dst_row = mat_padded.rows_ - row - 1;
 								uint32_t reverse_dst_col = mat_padded.cols_ - col - 1;
 								uint32_t reverse_dst_page = mat_padded.pages_ - page - 1;
-								uint32_t src_row = kernel.rows_ / 2 + MAX((int64_t)row - 1, 0);
-								uint32_t src_col = kernel.cols_ / 2 + MAX((int64_t)col - 1, 0);
-								uint32_t src_page = kernel.pages_ / 2 + MAX((int64_t)page - 1, 0);
+								uint32_t src_row = kernel.rows_ / 2 +   static_cast<uint32_t>(MAX((int64_t)row - 1, 0));
+								uint32_t src_col = kernel.cols_ / 2 +   static_cast<uint32_t>(MAX((int64_t)col - 1, 0));
+								uint32_t src_page = kernel.pages_ / 2 + static_cast<uint32_t>(MAX((int64_t)page - 1, 0));
 								uint32_t reverse_src_row = mat_padded.rows_ - src_row - 1;
 								uint32_t reverse_src_col = mat_padded.cols_ - src_col - 1;
 								uint32_t reverse_src_page = mat_padded.pages_ - src_page - 1;
@@ -282,17 +282,17 @@ namespace ion
 		//I have not yet implemented support for 2D or 3D bilerp
 		LOGASSERT(new_cols == cols_ && new_pages == 1);
 		ion::Matrix<T> result(new_rows, new_cols, new_pages);
-		float row_scale = (float)rows_ / new_rows;
+		float row_scale = (float)rows_ / (float)new_rows;
 		for (uint32_t row = 0; row < result.rows_; ++row)
 		{
-			float source_row = row * row_scale;
-			uint32_t input_1_row = (uint32_t)floor(source_row);
+			float source_row = (float)row * row_scale;
+			uint32_t input_1_row = (uint32_t)floorf(source_row);
 			uint32_t input_2_row = ion::clamp((uint32_t)ceil(source_row), (uint32_t)0UL,(uint32_t)rows_-1);
-			float distance = source_row - floor(source_row);
+			float distance = source_row - floorf(source_row);
 			for (uint32_t col = 0; col < result.cols_; ++col)
 			{
 				//bilerp the two cells around the target cells
-				result.At(row, col, 0) = static_cast<T>(At(input_1_row,col,0) * (1.0f - distance) + At(input_2_row, col, 0) * (distance));
+				result.At(row, col, 0) = static_cast<T>(static_cast<float>(At(input_1_row,col,0)) * (1.0f - distance) + static_cast<float>(At(input_2_row, col, 0)) * distance);
 			}
 		}
 		return result;
