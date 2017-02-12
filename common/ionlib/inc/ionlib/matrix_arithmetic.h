@@ -284,7 +284,8 @@ namespace ion
 	float ion::Matrix<float>::ElementwiseMultiplyRotatedWithSumFastSSE3x3(const Matrix<float>& multiplier)
 	{
 		float sum = 0.0f;
-		LOGFATAL("Not implemented");
+		LOGFATAL("Not implemented %u", multiplier.user_id);
+
 		return sum;
 	}
 	template <class T>
