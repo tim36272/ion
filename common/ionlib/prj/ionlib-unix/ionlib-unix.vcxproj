@@ -19,15 +19,16 @@
     <ApplicationTypeRevision>1.0</ApplicationTypeRevision>
     <TargetLinuxPlatform>Generic</TargetLinuxPlatform>
     <LinuxProjectType>{2238F9CD-F817-4ECC-BD14-2524D2669B35}</LinuxProjectType>
+    <ProjectName>libion-unix</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <UseDebugLibraries>false</UseDebugLibraries>
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings" />
@@ -35,14 +36,16 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(ProjectDir)..\..\bin\</OutDir>
+    <OutDir>$(ProjectDir)bin\</OutDir>
     <TargetName>$(ProjectName)-$(Platform)-$(Configuration)</TargetName>
     <IncludePath>$(ProjectDir)..\..\inc;$(IncludePath)</IncludePath>
+    <TargetExt>.so</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>$(ProjectName)-$(Platform)-$(Configuration)</TargetName>
-    <OutDir>$(ProjectDir)..\..\bin\</OutDir>
+    <OutDir>$(ProjectDir)bin\</OutDir>
     <IncludePath>$(ProjectDir)..\..\inc;$(IncludePath)</IncludePath>
+    <TargetExt>.so</TargetExt>
   </PropertyGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\ionlib\app_util.h" />
@@ -54,12 +57,39 @@
     <ClInclude Include="..\..\inc\ionlib\matrix_filtering.h" />
     <ClInclude Include="..\..\inc\ionlib\matrix_opencv.h" />
     <ClInclude Include="..\..\inc\ionlib\matrix_serialization.h" />
+    <ClInclude Include="..\..\inc\ionlib\time.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\app_util.cpp" />
+    <ClCompile Include="..\..\src\log.cpp" />
+    <ClCompile Include="..\..\src\math.cpp" />
     <ClCompile Include="..\..\src\matrix_implementation.cpp" />
+    <ClCompile Include="..\..\src\time.cpp" />
   </ItemGroup>
-  <ItemDefinitionGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <CAdditionalWarning>no-write-strings;%(CAdditionalWarning)</CAdditionalWarning>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <CppAdditionalWarning>no-write-strings;%(CppAdditionalWarning)</CppAdditionalWarning>
+      <AdditionalOptions>-I$HOME/projects/$(ProjectName)/inc %(AdditionalOptions)</AdditionalOptions>
+      <PositionIndependentCode>true</PositionIndependentCode>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <CAdditionalWarning>no-write-strings;%(CAdditionalWarning)</CAdditionalWarning>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <CppAdditionalWarning>no-write-strings;%(CppAdditionalWarning)</CppAdditionalWarning>
+      <AdditionalOptions>-I$HOME/projects/$(ProjectName)/inc %(AdditionalOptions)</AdditionalOptions>
+      <PositionIndependentCode>true</PositionIndependentCode>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
 </Project>

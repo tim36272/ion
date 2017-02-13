@@ -20,14 +20,16 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #include <stdarg.h>
 #include "ionlib/app_util.h"
 #include "ionlib/time.h"
+#ifdef _WIN32
 #include "ionlib/backdoor.h"
-
+#endif
 namespace ion
 {
 	Logger logout;
 	std::ofstream g_log_file;
+#ifdef _WIN32
 	ion::Backdoor* g_backdoor = nullptr;
-
+#endif
 	bool LogInit(const char* log_file_name)
 	{
 		g_log_file.open(log_file_name);
@@ -42,10 +44,12 @@ namespace ion
 		LOGINFO("Logging to %s", log_file_name);
 		return true;
 	}
+#ifdef _WIN32
 	void LogAddBackdoor(ion::Backdoor * backdoor)
 	{
 		g_backdoor = backdoor;
 	}
+#endif
 	void LogClose()
 	{
 		if (g_log_file.is_open())
@@ -73,10 +77,12 @@ namespace ion
 		num_bytes_written += snprintf(buffer + num_bytes_written, IONLOG_MAX_MESSAGE_LENGTH - num_bytes_written, "\r\n");
 		printf(buffer);
 		g_log_file << buffer;
+#ifdef _WIN32
 		if (g_backdoor)
 		{
 			g_backdoor->printf(buffer);
 		}
+#endif
 		va_end(args);
 	}
 

@@ -122,7 +122,8 @@ namespace ion
 #ifdef _WIN32
 		fread_s(data_ + MAT_INDEX(*this, 0, 0, 0), NumCells() * sizeof(T), sizeof(T), num_elements, fin);
 #else
-		fread(data_ + MAT_INDEX(*this, 0, 0, 0), sizeof(T), num_elements, fin);
+		size_t bytes_read = fread(data_ + MAT_INDEX(*this, 0, 0, 0), sizeof(T), num_elements, fin);
+		LOGASSERT(bytes_read == sizeof(T)*num_elements);
 #endif
 	}
 	template <class T>

@@ -15,59 +15,35 @@ You should have received a copy of the GNU General Public License
 along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 */
 #include "ionlib/time.h"
-#include <windows.h>
-#include <VersionHelpers.h>
+#include <thread>
+#include <chrono>
 namespace ion
 {
-	static long long counter_frequency = 0LL;
-	static int64_t counter_origin = 0;
-	//will be called by backend if the user doesn't call it, you can call this manually if you care about the first measurement being as accurate as possible
+	static std::chrono::high_resolution_clock::time_point begin_g;
+	static bool time_initialized_g = false;
 	void TimeInit()
 	{
-		LARGE_INTEGER frequency;
-		QueryPerformanceFrequency(&frequency);
-		counter_frequency = frequency.QuadPart;
-		LARGE_INTEGER counter;
-		BOOL result = 0;
-		while (result == 0)
-		{
-			result = QueryPerformanceCounter(&counter);
-		}
-		counter_origin = counter.QuadPart;
+		begin_g = std::chrono::high_resolution_clock::now();
 	}
 	//fast-query timer, may be the number of seconds since the program started
 	double TimeGet()
 	{
-		if (counter_frequency == 0.0)
+		if (!time_initialized_g)
 		{
 			TimeInit();
 		}
-		LARGE_INTEGER counter;
-		QueryPerformanceCounter(&counter);
-		long long time_microseconds = ((counter.QuadPart-counter_origin) * 1000000 / counter_frequency);
-		//report time in seconds
-		return time_microseconds / 1000000.0;
-
+		std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
+		return std::chrono::duration_cast<std::chrono::duration<double>>(now - begin_g).count();
 	}
 	//gives time since January 1, 1970 at midnight
 	double TimeGetEpoch()
 	{
-		FILETIME time;
-//#if NTDDI_VERSION < NTDDI_WIN8 
-		GetSystemTimeAsFileTime(&time);
-//#else
-//		GetSystemTimePreciseAsFileTime(&time);
-//#endif
-		static const uint64_t EPOCH_DIFFERENCE_TENTH_MICROS = 116444736000000000ull;
-		// First convert 100-ns intervals to microseconds, then adjust for the
-		// epoch difference
-		uint64_t total_us = (((uint64_t)time.dwHighDateTime << 32) | (uint64_t)time.dwLowDateTime);
-		total_us -= EPOCH_DIFFERENCE_TENTH_MICROS;
-
-		return total_us / 10000000.0;
+		std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
+		return std::chrono::duration_cast<std::chrono::duration<double>>(now.time_since_epoch()).count();
 	}
 	void ThreadSleep(uint32_t milliseconds)
 	{
-		Sleep(milliseconds);
+		std::chrono::duration<double, std::milli> duration(milliseconds*1000.0);
+		std::this_thread::sleep_for(duration);
 	}
 };
