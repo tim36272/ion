@@ -17,6 +17,7 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #include "ionlib/config.h"
 #include <fstream>
 #include "ionlib/log.h"
+#include <limits>
 namespace ion
 {
 	Config::Config(const char* filename)

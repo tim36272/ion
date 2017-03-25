@@ -17,6 +17,8 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #ifndef ION_CONFIG_H_
 #define ION_CONFIG_H_
 #include <vector>
+#include <float.h>
+#include <string.h>
 #include <utility>
 #include "ionlib/log.h"
 
@@ -42,43 +44,43 @@ namespace ion
 			{
 				return -DBL_MAX;
 			}
-			return std::strtod(Find(keyname)->second, NULL);
+			return std::strtod(Find(keyname)->second, nullptr);
 		}
 		float Getf(const char* keyname)
 		{
-			return std::strtof(Find(keyname)->second, NULL);
+			return std::strtof(Find(keyname)->second, nullptr);
 		}
 		int8_t Getb(const char* keyname)
 		{
-			return (int8_t)std::strtol(Find(keyname)->second, NULL, 10);
+			return (int8_t)std::strtol(Find(keyname)->second, nullptr, 10);
 		}
 		uint8_t Getub(const char* keyname)
 		{
-			return (uint8_t)std::strtoul(Find(keyname)->second, NULL, 10);
+			return (uint8_t)std::strtoul(Find(keyname)->second, nullptr, 10);
 		}
 		int16_t Gets(const char* keyname)
 		{
-			return (int16_t)std::strtol(Find(keyname)->second, NULL, 10);
+			return (int16_t)std::strtol(Find(keyname)->second, nullptr, 10);
 		}
 		uint16_t Getus(const char* keyname)
 		{
-			return (uint16_t)std::strtoul(Find(keyname)->second, NULL, 10);
+			return (uint16_t)std::strtoul(Find(keyname)->second, nullptr, 10);
 		}
 		int32_t Getd(const char* keyname)
 		{
-			return std::strtol(Find(keyname)->second, NULL, 10);
+			return (int32_t)std::strtol(Find(keyname)->second, nullptr, 10);
 		}
 		uint32_t Getu(const char* keyname)
 		{
-			return std::strtoul(Find(keyname)->second, NULL, 10);
+			return (uint32_t)std::strtoul(Find(keyname)->second, nullptr, 10U);
 		}
 		int64_t Getdll(const char* keyname)
 		{
-			return std::strtoll(Find(keyname)->second, NULL, 10);
+			return std::strtoll(Find(keyname)->second, nullptr, 10);
 		}
 		uint64_t Getull(const char* keyname)
 		{
-			return std::strtoull(Find(keyname)->second, NULL, 10);
+			return std::strtoull(Find(keyname)->second, nullptr, 10);
 		}
 		bool Getbool(const char* keyname)
 		{

@@ -49,6 +49,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\ionlib\app_util.h" />
+    <ClInclude Include="..\..\inc\ionlib\config.h" />
     <ClInclude Include="..\..\inc\ionlib\log.h" />
     <ClInclude Include="..\..\inc\ionlib\math.h" />
     <ClInclude Include="..\..\inc\ionlib\matrix.h" />
@@ -61,6 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\app_util.cpp" />
+    <ClCompile Include="..\..\src\config.cpp" />
     <ClCompile Include="..\..\src\log.cpp" />
     <ClCompile Include="..\..\src\math.cpp" />
     <ClCompile Include="..\..\src\matrix_implementation.cpp" />

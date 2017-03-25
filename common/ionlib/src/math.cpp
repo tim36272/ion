@@ -32,6 +32,10 @@ namespace ion
 		LOGSANITY(low <= val && val <= high);
 		return val;
 	}
+	void srand(uint32_t seed)
+	{
+		std::srand(seed);
+	}
 	//uint32_t randul(uint32_t low, uint32_t high)
 	//{
 	//	uint32_t val;

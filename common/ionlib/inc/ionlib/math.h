@@ -34,7 +34,7 @@ namespace ion
 #endif
 
 #define FEET_TO_METERS (0.3048)
-
+	void srand(uint32_t seed);
 	double randlf(double low, double high);
 	uint64_t randull(uint64_t low, uint64_t high);
 	double random_normal_distribution(double low, double high);

@@ -126,6 +126,9 @@
     <ClInclude Include="..\..\inc\ionlib\counter.h">
       <Filter>Header Files\Util</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\ionlib\serial.h">
+      <Filter>Header Files\OS</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\app_util.cpp">
@@ -168,6 +171,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\backdoor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\serial.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -19,8 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{21C7F04D-BA7B-44B3-A4D4-E321CF56327C}</ProjectGuid>
-    <RootNamespace>appwin</RootNamespace>
+    <ProjectGuid>{EC6A22C7-DB3F-4756-8519-DA4CAFE19EDE}</ProjectGuid>
+    <RootNamespace>composerwin</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -72,8 +72,8 @@
     <OutDir>$(ProjectDir)..\..\bin\</OutDir>
     <IntDir>$(ProjectDir)\$(Platform)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)-$(Platform)-$(Configuration)</TargetName>
-    <IncludePath>$(ProjectDir)..\..\..\..\..\ion\common\ionlib\inc;$(ProjectDir)..\..\inc;$(ProjectDir)..\..\..\..\..\libtelnet;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)..\..\..\..\..\ion\common\ionlib\bin;$(ProjectDir)..\..\..\..\..\libtelnet\bin;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\..\..\..\..\ion\common\ionlib\inc;$(ProjectDir)..\..\inc;$(ProjectDir)..\..\..\..\..\libtelnet;$(ProjectDir)..\..\..\..\..\opencv\bin\install\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)..\..\..\..\..\ion\common\ionlib\bin;$(ProjectDir)..\..\..\..\..\libtelnet\bin;$(ProjectDir)..\..\..\..\..\opencv\bin\install\$(Platform)\vc14\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(ProjectDir)..\..\bin\</OutDir>
@@ -86,8 +86,8 @@
     <OutDir>$(ProjectDir)..\..\bin\</OutDir>
     <IntDir>$(ProjectDir)\$(Platform)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)-$(Platform)-$(Configuration)</TargetName>
-    <IncludePath>$(ProjectDir)..\..\..\..\..\ion\common\ionlib\inc;$(ProjectDir)..\..\inc;$(ProjectDir)..\..\..\..\..\libtelnet;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)..\..\..\..\..\ion\common\ionlib\bin;$(ProjectDir)..\..\..\..\..\libtelnet\bin;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\..\..\..\..\ion\common\ionlib\inc;$(ProjectDir)..\..\inc;$(ProjectDir)..\..\..\..\..\libtelnet;$(ProjectDir)..\..\..\..\..\opencv\bin\install\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)..\..\..\..\..\ion\common\ionlib\bin;$(ProjectDir)..\..\..\..\..\libtelnet\bin;$(ProjectDir)..\..\..\..\..\opencv\bin\install\$(Platform)\vc14\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(ProjectDir)..\..\bin\</OutDir>
@@ -103,7 +103,7 @@
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ionlib-win-$(Platform)-$(Configuration).lib;ws2_32.lib;libtelnet-$(Platform)-$(Configuration).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ionlib-win-$(Platform)-$(Configuration).lib;ws2_32.lib;libtelnet-$(Platform)-$(Configuration).lib;opencv_core320d.lib;opencv_imgproc320d.lib;opencv_highgui320d.lib;opencv_video320d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -113,7 +113,7 @@
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ionlib-win-$(Platform)-$(Configuration).lib;ws2_32.lib;libtelnet-$(Platform)-$(Configuration).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ionlib-win-$(Platform)-$(Configuration).lib;ws2_32.lib;libtelnet-$(Platform)-$(Configuration).lib;opencv_core320d.lib;opencv_imgproc320d.lib;opencv_highgui320d.lib;opencv_video320d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
