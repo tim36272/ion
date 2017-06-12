@@ -35,6 +35,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "composer-win", "..\..\app\c
 		{473E809F-98A8-4A92-A204-8A40775C3875} = {473E809F-98A8-4A92-A204-8A40775C3875}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dominoCounter-win", "..\..\app\dominoCounter\prj\dominoCounter-win\dominoCounter-win.vcxproj", "{260BC20E-E28B-42E2-847E-CE06588F03C8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -115,6 +117,14 @@ Global
 		{EC6A22C7-DB3F-4756-8519-DA4CAFE19EDE}.Release|x64.Build.0 = Release|x64
 		{EC6A22C7-DB3F-4756-8519-DA4CAFE19EDE}.Release|x86.ActiveCfg = Release|Win32
 		{EC6A22C7-DB3F-4756-8519-DA4CAFE19EDE}.Release|x86.Build.0 = Release|Win32
+		{260BC20E-E28B-42E2-847E-CE06588F03C8}.Debug|x64.ActiveCfg = Debug|x64
+		{260BC20E-E28B-42E2-847E-CE06588F03C8}.Debug|x64.Build.0 = Debug|x64
+		{260BC20E-E28B-42E2-847E-CE06588F03C8}.Debug|x86.ActiveCfg = Debug|Win32
+		{260BC20E-E28B-42E2-847E-CE06588F03C8}.Debug|x86.Build.0 = Debug|Win32
+		{260BC20E-E28B-42E2-847E-CE06588F03C8}.Release|x64.ActiveCfg = Release|x64
+		{260BC20E-E28B-42E2-847E-CE06588F03C8}.Release|x64.Build.0 = Release|x64
+		{260BC20E-E28B-42E2-847E-CE06588F03C8}.Release|x86.ActiveCfg = Release|Win32
+		{260BC20E-E28B-42E2-847E-CE06588F03C8}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

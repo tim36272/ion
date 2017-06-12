@@ -146,7 +146,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\Timelapse.cpp" />
+    <ClInclude Include="..\..\inc\sentry\MotionDetection.h" />
+    <ClCompile Include="..\..\src\Backdoor.cpp" />
+    <ClCompile Include="..\..\src\CameraIO.cpp" />
+    <ClCompile Include="..\..\src\MotionDetection.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
+    <ClCompile Include="..\..\src\Output.cpp" />
+    <ClInclude Include="..\..\inc\sentry\Timelapse.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\inc\sentry\Backdoor.h" />
+    <ClInclude Include="..\..\inc\sentry\CameraIO.h" />
+    <ClInclude Include="..\..\inc\sentry\Common.h" />
+    <ClInclude Include="..\..\inc\sentry\Output.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
