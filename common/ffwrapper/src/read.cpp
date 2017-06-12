@@ -38,6 +38,7 @@ extern "C" {
 	{
 		struct FFReadImpl
 		{
+			//Video
 			AVFormatContext *fmt_ctx_;
 			AVCodecContext *video_dec_ctx_;
 			AVStream *video_stream_;
@@ -59,6 +60,11 @@ extern "C" {
 
 			//debug
 			bool warned_about_non_video;
+
+			//audio
+			int audio_stream_index;
+			AVCodecContext *audio_dec_ctx_;
+
 		};
 
 		static int open_codec_context(int *stream_idx,

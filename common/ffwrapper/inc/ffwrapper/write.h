@@ -24,7 +24,7 @@ namespace ion
 	class FFWriter
 	{
 	public:
-		FFWriter(std::string uri, uint32_t rows, uint32_t cols);
+		FFWriter(std::string uri, uint32_t rows, uint32_t cols, const char* codec_name = nullptr);
 		~FFWriter();
 		void WriteFrame(const ion::Image& img);
 		void Close();

@@ -33,7 +33,6 @@ extern "C" {
 
 #include "ffwrapper/write.h"
 
-#define STREAM_PIX_FMT    AV_PIX_FMT_YUV420P /* default pix_fmt */
 #define STREAM_FRAME_RATE 25 /* 25 images/s */
 #define SCALE_FLAGS SWS_BICUBIC
 
@@ -144,20 +143,24 @@ namespace ion
 				time_base.den = STREAM_FRAME_RATE;
 				impl->video_stream_->time_base = time_base;
 				c->time_base = impl->video_stream_->time_base;
-
+				c->pix_fmt = impl->video_codec_context_->get_format(impl->video_codec_context_, (**codec).pix_fmts);
 				c->gop_size = 12; /* emit one intra frame every twelve frames at most */
-				c->pix_fmt = STREAM_PIX_FMT;
-				if (c->codec_id == AV_CODEC_ID_MPEG2VIDEO)
+
+				//set some codec-specific options
+				switch (c->codec_id)
 				{
-					/* just for testing, we also add B-frames */
-					c->max_b_frames = 2;
-				}
-				if (c->codec_id == AV_CODEC_ID_MPEG1VIDEO)
-				{
-					/* Needed to avoid using macroblocks in which some coeffs overflow.
-					* This does not happen with normal video, it just happens here as
-					* the motion of the chroma plane does not match the luma plane. */
-					c->mb_decision = 2;
+					case AV_CODEC_ID_MPEG2VIDEO:
+						/* just for testing, we also add B-frames */
+						c->max_b_frames = 2;
+						break;
+					case AV_CODEC_ID_MPEG1VIDEO:
+						/* Needed to avoid using macroblocks in which some coeffs overflow.
+						* This does not happen with normal video, it just happens here as
+						* the motion of the chroma plane does not match the luma plane. */
+						c->mb_decision = 2;
+						break;
+					default:
+						break;
 				}
 				break;
 
@@ -292,7 +295,7 @@ namespace ion
 	}
 
 
-	FFWriter::FFWriter(std::string uri, uint32_t rows, uint32_t cols) : video_open_(false)
+	FFWriter::FFWriter(std::string uri, uint32_t rows, uint32_t cols, const char* codec_name) : video_open_(false)
 	{
 		AVCodec* video_codec = NULL;
 		int have_video = 0, have_audio = 0;
@@ -307,7 +310,7 @@ namespace ion
 		av_register_all();
 
 		/* allocate the output media context */
-		avformat_alloc_output_context2(&impl->fmt_ctx_, NULL, NULL, uri.c_str());
+		avformat_alloc_output_context2(&impl->fmt_ctx_, NULL, codec_name, uri.c_str());
 		if (!impl->fmt_ctx_)
 		{
 			printf("Could not deduce output format from file extension: using MPEG.\n");
@@ -442,7 +445,14 @@ namespace ion
 			* av_write_trailer() may try to use memory that was freed on
 			* av_codec_close(). */
 			av_write_trailer(impl->fmt_ctx_);
+
+			avcodec_close(impl->video_codec_context_);
+			av_frame_free(&impl->frame_);
+			av_frame_free(&impl->temp_frame_);
+			sws_freeContext(impl->sws_context_);
+			avformat_free_context(impl->fmt_ctx_);
 			video_open_ = false;
+
 		}
 	}
 };
