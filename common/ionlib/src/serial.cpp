@@ -30,7 +30,7 @@ namespace ion
 		handle_ = new SerialHandle_t;
 		char port_name[16];
 		sprintf_s(port_name, "\\\\.\\COM%d", port);
-		handle_->handle = CreateFile(port_name, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+		handle_->handle = CreateFile(port_name, GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 		if (handle_->handle == INVALID_HANDLE_VALUE)
 		{
 			LPVOID lpMsgBuf;
@@ -90,13 +90,28 @@ namespace ion
 			case ion::Serial::Baud::RATE_115200:
 				serial_params.BaudRate = CBR_115200;
 				break;
+			case ion::Serial::Baud::RATE_125200:
+				serial_params.BaudRate = 125200;
+				break;
+			case ion::Serial::Baud::RATE_230400:
+				serial_params.BaudRate = 230400;
+				break;
+			case ion::Serial::Baud::RATE_345600:
+				serial_params.BaudRate = 345600;
+				break;
 			default:
-				LOGFATAL("Illegal value for baud: %u", baud);
+				LOGINFO("Unexpected value for baud: %u, continue at your own risk", baud);
+				serial_params.BaudRate = (DWORD)baud;
 				break;
 		}
 		serial_params.ByteSize = 8;
 		serial_params.StopBits = ONESTOPBIT;
 		serial_params.Parity = NOPARITY;
+		//the next four settings match what Arduino expects
+		serial_params.fRtsControl = RTS_CONTROL_DISABLE;
+		serial_params.fDtrControl = DTR_CONTROL_DISABLE;
+		serial_params.XonChar = 0;
+		serial_params.XoffChar = 0;
 		if (SetCommState(handle_->handle, &serial_params) == 0)
 		{
 			LOGFATAL("Error setting serial params");

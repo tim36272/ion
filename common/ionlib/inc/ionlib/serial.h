@@ -35,7 +35,10 @@ namespace ion
 			RATE_19200,
 			RATE_38400,
 			RATE_57600,
-			RATE_115200
+			RATE_115200,
+			RATE_125200, //custom Aruduino rate
+			RATE_230400, //custom Aruduino rate
+			RATE_345600 //custom Aruduino rate
 		};
 		Serial(uint32_t port, ion::Serial::Baud baud);
 		void Write(const byte_t* data, uint32_t length);
