@@ -24,6 +24,7 @@ namespace ion
 	void TimeInit()
 	{
 		begin_g = std::chrono::high_resolution_clock::now();
+		time_initialized_g = true;
 	}
 	//fast-query timer, may be the number of seconds since the program started
 	double TimeGet()
@@ -38,12 +39,18 @@ namespace ion
 	//gives time since January 1, 1970 at midnight
 	double TimeGetEpoch()
 	{
-		std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
+		//time_t t;
+		//struct tm tm;
+		//struct tm * tmp;
+		//t = mktime(&tm);
+		//tmp = localtime(&t);
+		//tmp->
+		std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
 		return std::chrono::duration_cast<std::chrono::duration<double>>(now.time_since_epoch()).count();
 	}
 	void ThreadSleep(uint32_t milliseconds)
 	{
-		std::chrono::duration<double, std::milli> duration(milliseconds*1000.0);
+		std::chrono::duration<double, std::milli> duration(milliseconds);
 		std::this_thread::sleep_for(duration);
 	}
 };

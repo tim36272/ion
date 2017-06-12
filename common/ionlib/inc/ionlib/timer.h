@@ -89,6 +89,10 @@ namespace ion
 		{
 			return start_;
 		}
+		double GetCurrent()
+		{
+			return ion::TimeGet() - start_;
+		}
 		void Reset()
 		{
 			count_ = 0ULL;
