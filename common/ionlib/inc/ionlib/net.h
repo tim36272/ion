@@ -25,6 +25,7 @@ namespace ion
 {
 	ion::Error InitSockets();
 	void StopSockets();
+	const char* getLastErrorString();
 	class UdpSocket
 	{
 	public:

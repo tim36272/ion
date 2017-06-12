@@ -75,7 +75,7 @@ namespace ion
 		//	linebuffer_push(linebuf, sizeof(linebuf), &linepos,
 		//	(char)buffer[i], _online, this);
 	}
-	static void _send(ion::TcpSocket socket, const char *buffer, size_t size)
+	static bool _send(ion::TcpSocket socket, const char *buffer, size_t size)
 	{
 
 		/* send data */
@@ -85,10 +85,13 @@ namespace ion
 			{
 				if (errno != EINTR && errno != ECONNRESET)
 				{
-					LOGFATAL("send() failed: %d\n", errno);
+					//We are no longer connected so disable logging to the backdoor
+					DisableBackdoor();
+					LOGINFO("Backdoor send() failed: errno: %d, WSA Error: %s", errno, ion::getLastErrorString());
+					return false;
 				} else
 				{
-					return;
+					return true;
 				}
 			}
 
@@ -96,10 +99,12 @@ namespace ion
 			buffer += size;
 			size -= size;
 		}
+		return true;
 	}
 	void telnetEventHandler(telnet_t *, telnet_event_t *ev, void *user_data)
 	{
 		Backdoor *user = (Backdoor*)user_data;
+		bool result;
 
 		switch (ev->type)
 		{
@@ -130,13 +135,19 @@ namespace ion
 				{
 					return;
 				}
-				_send(user->socket_, ev->data.buffer, ev->data.size);
+				result = _send(user->socket_, ev->data.buffer, ev->data.size);
+				if (!result)
+				{
+					user->connected_ = false;
+					user->socket_.Close();
+					telnet_free(user->telnet_);
+				}
 				break;
 				/* error */
 			case TELNET_EV_ERROR:
+				user->connected_ = false;
 				user->socket_.Close();
 				telnet_free(user->telnet_);
-				user->connected_ = false;
 				break;
 			default:
 				/* ignore */

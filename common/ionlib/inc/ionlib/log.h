@@ -29,6 +29,7 @@ namespace ion
 	//define macros for debug, info, warn, error, and fatal types
 	bool LogInit(const char* log_file_name);
 	void LogAddBackdoor(ion::Backdoor* backdoor);
+	void DisableBackdoor();
 	void LogPrintf(const char* file, uint32_t line, char* format, ...);
 	void LogClose();
 	void LogFlush();

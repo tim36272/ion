@@ -131,7 +131,7 @@ namespace ion
 			int32_t bytes = recvfrom(this->socket_handle_, buf, len, 0, (sockaddr*)&sender, &sender_length);
 			if (bytes == SOCKET_ERROR)
 			{
-				LOGERROR("Failed to receive packet: %d %s", GetLastError(), getLastErrorString());
+				LOGERROR("Failed to receive packet: %d %s", GetLastError(), ion::getLastErrorString());
 				return ion::Error::Get(ion::Error::SOCKET);
 			}
 
@@ -233,7 +233,7 @@ namespace ion
 		*bytes_read = recvfrom(connection_socket_handle_, buf, buf_len, 0, (sockaddr*)&from, &from_size);
 		if (*bytes_read == SOCKET_ERROR)
 		{
-			LOGERROR("Failed to receive packet: %d %s", GetLastError(), getLastErrorString());
+			LOGERROR("Failed to receive packet: %d %s", GetLastError(), ion::getLastErrorString());
 			return ion::Error::Get(ion::Error::SOCKET);
 		}
 		if (from_address)

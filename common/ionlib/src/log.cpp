@@ -49,6 +49,10 @@ namespace ion
 	{
 		g_backdoor = backdoor;
 	}
+	void DisableBackdoor()
+	{
+		g_backdoor = nullptr;
+	}
 #endif
 	void LogClose()
 	{
