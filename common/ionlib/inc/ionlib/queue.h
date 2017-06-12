@@ -20,11 +20,13 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #include <chrono>
 #include <condition_variable>
 #include "ionlib/error.h"
+#include "ionlib\log.h"
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
 
 #define QUEUE_NO_BLOCK (uint32_t)(-1)
+#define QUEUE_WAIT_FOREVER (uint32_t)(0)
 
 namespace ion
 {
@@ -69,7 +71,7 @@ namespace ion
 		{
 			std::chrono::duration<double> timeout;
 			//get chrono duration
-			if (milliseconds == 0)
+			if (milliseconds == QUEUE_WAIT_FOREVER)
 			{
 				timeout = (std::chrono::duration<int32_t, std::milli>::max)();
 			} else
