@@ -41,7 +41,8 @@ namespace ion
 			}
 			timelapse_timer.Begin();
 			bool trigger_new_video = false;
-			for (uint32_t this_frame_index = 0; timelapse_config->frames_written_ < timelapse_config->frames_per_video_ && !trigger_new_video; ++this_frame_index)
+			uint32_t frames_written_this_event = 0;
+			for (uint32_t this_frame_index = 0; frames_written_this_event < timelapse_config->frames_per_video_ && !trigger_new_video; ++this_frame_index)
 			{
 				std::shared_ptr<ion::Image> input;
 				ion::Error result = timelapse_config->image_input_.Pop(0, &input);
@@ -67,7 +68,8 @@ namespace ion
 					{
 						(*it)->Push(temp_img);
 					}
-					timelapse_config->frames_written_++;
+					++timelapse_config->frames_written_;
+					++frames_written_this_event;
 				}
 				trigger_new_video = timelapse_config->trigger_new_video;
 			}

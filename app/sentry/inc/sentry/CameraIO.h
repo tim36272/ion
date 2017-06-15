@@ -26,10 +26,12 @@ namespace ion
 	{
 		CameraIoConfig_t(std::string camera_uri) : reader(camera_uri)
 		{
+			shutdownInProgress = false;
 		}
 		ion::FFReader reader;
 		ion::Timer fps_;
 		std::vector<ion::Queue<std::shared_ptr<ion::Image>>*> output; //the thread pushes each new image onto each queue in this vector
+		bool shutdownInProgress;
 	};
 	void cameraIoThread(void* args);
 }

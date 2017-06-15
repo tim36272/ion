@@ -24,7 +24,7 @@ namespace ion
 		EventBase event_in_progress;
 		event_in_progress.in_progress_ = false;
 		ion::Error result;
-		while (true)
+		while (!output_proc->shutdownInProgress)
 		{
 			//the queue automatically ringbuffers, and is sized per the pre-record length. So, when not currently outputting, we only have to listen for events, not frames
 			if (event_in_progress.in_progress_ == false)
@@ -85,5 +85,14 @@ namespace ion
 				}
 			}
 		}
+		//close the video file
+		if (output_proc->video_file_open_)
+		{
+			output_proc->video_file_open_ = false;
+			LOGINFO("Closing video file");
+			output_proc->writer->Close();
+			delete output_proc->writer;
+		}
+		output_proc->shutdownInProgress = false;
 	}
 };

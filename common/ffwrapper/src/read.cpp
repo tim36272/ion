@@ -267,6 +267,13 @@ extern "C" {
 		}
 		FFReader::~FFReader()
 		{
+			sws_freeContext(impl->sws_context_);
+			delete impl->rgb_data_;
+			avcodec_free_context(&impl->video_dec_ctx_);
+			avformat_close_input(&impl->fmt_ctx_);
+			av_frame_free(&impl->frame_);
+			av_free(impl->video_dst_data_[0]);
+
 			delete impl;
 		}
 		ion::Image FFReader::ReadFrame()

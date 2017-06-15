@@ -25,6 +25,10 @@ namespace ion
 {
 	typedef struct sentry_s
 	{
+		sentry_s()
+		{
+			shutdownInProgress = false;
+		}
 		ion::CameraIoConfig_t* ioConfig;
 		ion::MotionDetectionConfig_t* motionDetectionConfig;
 		ion::TimelapseConfig_t* timelapseConfig_;
@@ -32,9 +36,10 @@ namespace ion
 		ion::CameraOutputConfig_t* motionDetectionOutputConfig;
 		ion::CameraOutputConfig_t* timelapseOutputConfig;
 		bool motionDetectionEnabled;
+		bool shutdownInProgress;
 	} sentry_t;
 
-	void init_sentry_backdoor(ion::Backdoor* backdoor, ion::CameraIoConfig_t * ioConfig, ion::MotionDetectionConfig_t * motionDetectionConfig, ion::MotionDetectionEventManagerConfig_t * motionDetectionEventProc, ion::CameraOutputConfig_t * motionDetectionOutputConfig, bool motionDetectionEnabled, ion::TimelapseConfig_t* timelapseConfig_, ion::CameraOutputConfig_t * timelapseOutputConfig);
+	void init_sentry_backdoor(ion::sentry_t* sentry, ion::Backdoor* backdoor, ion::CameraIoConfig_t * ioConfig, ion::MotionDetectionConfig_t * motionDetectionConfig, ion::MotionDetectionEventManagerConfig_t * motionDetectionEventProc, ion::CameraOutputConfig_t * motionDetectionOutputConfig, bool motionDetectionEnabled, ion::TimelapseConfig_t* timelapseConfig_, ion::CameraOutputConfig_t * timelapseOutputConfig);
 	void sentry_stat(ion::Backdoor* bd, std::string args, void* usr_data);
 };
 #endif //SENTRY_BACKDOOR_H_

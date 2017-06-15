@@ -22,7 +22,7 @@ namespace ion
 	void cameraIoThread(void* args)
 	{
 		CameraIoConfig_t* io_proc = (CameraIoConfig_t*)args;
-		while (true)
+		while (!io_proc->shutdownInProgress)
 		{
 			std::shared_ptr<ion::Image> temp_img(new ion::Image(std::move(io_proc->reader.ReadFrame())));
 
@@ -37,5 +37,6 @@ namespace ion
 			cv::waitKey(1);
 #endif
 		}
+		io_proc->shutdownInProgress = false;
 	}
 };

@@ -27,6 +27,7 @@ namespace ion
 	{
 		CameraOutputConfig_t(uint32_t prerecord_frames) : video_file_open_(false), image_input_(prerecord_frames)
 		{
+			shutdownInProgress = false;
 		}
 		ion::Queue<std::shared_ptr<ion::Image>> image_input_;
 		ion::Queue<ion::EventBase> event_input_;
@@ -35,6 +36,7 @@ namespace ion
 		bool video_file_open_;
 		std::string output_dir_;
 		std::string camera_name_;
+		bool shutdownInProgress;
 
 		//debug/instrumentation
 	};

@@ -18,9 +18,9 @@ along with Ionlib.If not, see <http://www.gnu.org/licenses/>.
 #include "ionlib\ascii.h"
 namespace ion
 {
-	void init_sentry_backdoor(ion::Backdoor* backdoor, ion::CameraIoConfig_t * ioConfig, ion::MotionDetectionConfig_t * motionDetectionConfig, ion::MotionDetectionEventManagerConfig_t * motionDetectionEventProc, ion::CameraOutputConfig_t * motionDetectionOutputConfig, bool motionDetectionEnabled, ion::TimelapseConfig_t* timelapseConfig_, ion::CameraOutputConfig_t * timelapseOutputConfig)
+	static void sentry_shutdown(ion::Backdoor* backdoor, std::string args, void* usr_data);
+	void init_sentry_backdoor(ion::sentry_t* sentry, ion::Backdoor* backdoor, ion::CameraIoConfig_t * ioConfig, ion::MotionDetectionConfig_t * motionDetectionConfig, ion::MotionDetectionEventManagerConfig_t * motionDetectionEventProc, ion::CameraOutputConfig_t * motionDetectionOutputConfig, bool motionDetectionEnabled, ion::TimelapseConfig_t* timelapseConfig_, ion::CameraOutputConfig_t * timelapseOutputConfig)
 	{
-		ion::sentry_t *sentry = new sentry_t;
 		sentry->ioConfig = ioConfig;
 		sentry->motionDetectionConfig = motionDetectionConfig;
 		sentry->motionDetectionEventProc = motionDetectionEventProc;
@@ -29,7 +29,19 @@ namespace ion
 		sentry->timelapseConfig_ = timelapseConfig_;
 		sentry->timelapseOutputConfig = timelapseOutputConfig;
 		backdoor->AddCommand("stat", "Summarize sentry status", ion::sentry_stat, sentry);
+		backdoor->AddCommand("shutdown", "Safely close all streams", ion::sentry_shutdown, sentry);
 		ion::LogAddBackdoor(backdoor);
+	}
+	static void sentry_shutdown(ion::Backdoor* backdoor, std::string args, void* usr_data)
+	{
+		sentry_t* sentry = (sentry_t*)usr_data;
+		sentry->ioConfig->shutdownInProgress = true;
+		sentry->timelapseOutputConfig->shutdownInProgress = true;
+		if (sentry->motionDetectionEnabled)
+		{
+			sentry->motionDetectionOutputConfig->shutdownInProgress = true;
+		}
+		sentry->shutdownInProgress = true;
 	}
 	//This function throughly violates my normal rules of descriptive variable names because the lines are already so long
 	void sentry_stat(ion::Backdoor* bd, std::string args, void* usr_data)

@@ -35,7 +35,6 @@ namespace ion
 		g_log_file.open(log_file_name);
 		if (!g_log_file.good())
 		{
-			//bypass the normal logger and just printf since logging isn't initialized yet
 			printf("Failed to open log file %s", log_file_name);
 			ion::AppFail(-1);
 			return false;

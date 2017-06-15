@@ -45,6 +45,11 @@ namespace ion
 		}
 		ion::Error Push(T& data)
 		{
+			//While this isn't technically a limitation, for all the things I am working on I definitely shouldn't have this many things in the queue
+			if (queue_.size() > 500000)
+			{
+				LOGINFO("Warning: there are over a half million items in this queue. Consider checking if this is an erorr");
+			}
 			//check if the queue is full
 			//dequeue items until the queue is below capacity. Note that this isn't entirely accurate: it is possible for another thread to dequeue an item while this thread is working, so don't depend on this to guarantee a max size
 			while(max_capacity_ > 0 && full_behavior_ == FullBehavior::RING_BUFFER && queue_.size() >= max_capacity_)

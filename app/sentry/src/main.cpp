@@ -1,3 +1,6 @@
+//#define _CRTDBG_MAP_ALLOC  
+//#include <stdlib.h>  
+//#include <crtdbg.h>  
 #include "ionlib/config.h"
 
 //#define SENTRY_DEBUG
@@ -10,9 +13,14 @@
 
 int main(int argc, char* argv[])
 {
+	//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	//_crtBreakAlloc = 9146;
 	ion::InitSockets();
-	ion::LogInit("sentry.log");
+	std::stringstream logfile_name;
+	logfile_name << std::fixed << "sentry_" << ion::TimeGetEpoch() << ".log";
+	ion::LogInit(logfile_name.str().c_str());
 
+	ion::sentry_t sentry;
 	ion::Config cfg("sentry.cfg");
 	for (uint32_t additional_config_index = 1; additional_config_index < (uint32_t)argc; ++additional_config_index)
 	{
@@ -68,7 +76,7 @@ int main(int argc, char* argv[])
 	
 	//Setup backdoor
 	ion::Backdoor backdoor(backdoor_port);
-	ion::init_sentry_backdoor(&backdoor, &ioConfig, motionDetection_p, motionDetectionEventProc_p, motionDetectionOutputConfig_p, motion_detection_enabled, &timelapseConfig, &timelapseOutputConfig);
+	ion::init_sentry_backdoor(&sentry, &backdoor, &ioConfig, motionDetection_p, motionDetectionEventProc_p, motionDetectionOutputConfig_p, motion_detection_enabled, &timelapseConfig, &timelapseOutputConfig);
 
 	//Configure IO
 
@@ -93,8 +101,15 @@ int main(int argc, char* argv[])
 
 	//launch threads to output images
 	ion::StartThread(ion::cameraOutputThread, (void*)&timelapseOutputConfig);
-
-
-	ion::SuspendCurrentThread();
+	
+	while (!sentry.shutdownInProgress)
+	{
+		ion::ThreadSleep(1000);
+	}
+	//Wait until all the threads are closed
+	while (sentry.ioConfig->shutdownInProgress || sentry.timelapseOutputConfig->shutdownInProgress || (sentry.motionDetectionOutputConfig && sentry.motionDetectionOutputConfig->shutdownInProgress))
+	{
+		ion::ThreadSleep(100);
+	}
 	return 0;
 }
