@@ -64,6 +64,9 @@ int main(int argc, char* argv[])
 		motionDetectionEventProc_p->post_record_time_ = cfg.Getf("POSTRECORD_TIME");
 		motionDetectionOutputConfig_p->output_dir_ = cfg.Getc("OUTPUT_DIR");
 		motionDetectionOutputConfig_p->camera_name_ = cfg.Getc("CAMERA_NAME");
+		motionDetectionOutputConfig_p->video_fps = cfg.Getu("MOTION_OUTPUT_FRAMERATE");
+		motionDetectionOutputConfig_p->qmin = cfg.Getu("MOTION_QMIN");
+		motionDetectionOutputConfig_p->qmax= cfg.Getu("MOTION_QMAX");
 
 
 		//launch threads to process images
@@ -89,7 +92,9 @@ int main(int argc, char* argv[])
 	timelapseConfig.image_output_.push_back(&timelapseOutputConfig.image_input_);
 	timelapseOutputConfig.output_dir_ = cfg.Getc("OUTPUT_DIR");
 	timelapseOutputConfig.camera_name_ = cfg.Getc("CAMERA_NAME");
-
+	timelapseOutputConfig.video_fps = cfg.Getu("TIMELAPSE_OUTPUT_FRAMERATE");
+	timelapseOutputConfig.qmin = cfg.Getu("TIMELAPSE_QMIN");
+	timelapseOutputConfig.qmax = cfg.Getu("TIMELAPSE_QMAX");
 
 	//launch threads to connect to cameras
 	//cameras capture from source and place the image into a queue

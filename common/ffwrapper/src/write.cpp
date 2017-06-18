@@ -33,7 +33,6 @@ extern "C" {
 
 #include "ffwrapper/write.h"
 
-#define STREAM_FRAME_RATE 25 /* 25 images/s */
 #define SCALE_FLAGS SWS_BICUBIC
 
 
@@ -69,7 +68,8 @@ namespace ion
 	};
 	/* Add an output stream. */
 	static void add_stream(FFWriteImpl *impl,
-						   AVCodec **codec)
+						   AVCodec **codec, uint32_t frame_rate,
+						   uint32_t qmin, uint32_t qmax)
 	{
 		AVCodecContext *c;
 		AVRational time_base;
@@ -132,6 +132,8 @@ namespace ion
 				c->codec_id = impl->fmt_ctx_->oformat->video_codec;
 
 				c->bit_rate = 400000;
+				c->qmin = qmin;
+				c->qmax = qmax;
 				/* Resolution must be a multiple of two. */
 				c->width = impl->width_;
 				c->height = impl->height_;
@@ -140,7 +142,7 @@ namespace ion
 				* timebase should be 1/framerate and timestamp increments should be
 				* identical to 1. */
 				time_base.num = 1;
-				time_base.den = STREAM_FRAME_RATE;
+				time_base.den = (int32_t)frame_rate;
 				impl->video_stream_->time_base = time_base;
 				c->time_base = impl->video_stream_->time_base;
 				c->pix_fmt = impl->video_codec_context_->get_format(impl->video_codec_context_, (**codec).pix_fmts);
@@ -295,7 +297,7 @@ namespace ion
 	}
 
 
-	FFWriter::FFWriter(std::string uri, uint32_t rows, uint32_t cols, const char* codec_name) : video_open_(false)
+	FFWriter::FFWriter(std::string uri, uint32_t rows, uint32_t cols, uint32_t video_fps, const char* codec_name, uint32_t qmin, uint32_t qmax) : video_open_(false)
 	{
 		AVCodec* video_codec = NULL;
 		int have_video = 0, have_audio = 0;
@@ -328,7 +330,7 @@ namespace ion
 		* and initialize the codecs. */
 		if (impl->fmt->video_codec != AV_CODEC_ID_NONE)
 		{
-			add_stream(impl, &video_codec);
+			add_stream(impl, &video_codec, video_fps, qmin, qmax);
 			have_video = 1;
 			encode_video = 1;
 		}
@@ -450,6 +452,7 @@ namespace ion
 			av_frame_free(&impl->frame_);
 			av_frame_free(&impl->temp_frame_);
 			sws_freeContext(impl->sws_context_);
+			avio_close(impl->fmt_ctx_->pb);
 			avformat_free_context(impl->fmt_ctx_);
 			video_open_ = false;
 

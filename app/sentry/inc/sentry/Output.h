@@ -37,7 +37,9 @@ namespace ion
 		std::string output_dir_;
 		std::string camera_name_;
 		bool shutdownInProgress;
-
+		uint32_t video_fps;
+		uint32_t qmin; //minimum quality (i.e. upper bound on quality. Lower = higher quality/bigger file size)
+		uint32_t qmax; //maximum quality (i.e. lower bound on quality. Bigger = lower quality/smaller file size)
 		//debug/instrumentation
 	};
 

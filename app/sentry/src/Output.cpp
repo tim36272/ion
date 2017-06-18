@@ -52,7 +52,7 @@ namespace ion
 					sprintf_s(video_filename, "%s\\%s_%lf.mp4", output_proc->output_dir_.c_str(), output_proc->camera_name_.c_str(), ion::TimeGetEpoch());
 					LOGINFO("Opening video file %s", video_filename);
 					output_proc->video_file_open_ = true;
-					output_proc->writer = new ion::FFWriter(video_filename, frame->rows(), frame->cols());
+					output_proc->writer = new ion::FFWriter(video_filename, frame->rows(), frame->cols(), output_proc->video_fps, nullptr, output_proc->qmin, output_proc->qmax);
 					output_proc->writer->WriteFrame(*frame);
 					output_proc->fps_.Reset();
 				}
